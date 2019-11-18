@@ -37,8 +37,7 @@ poetry install
 ```
 
 ### Create your own idea
-We encourage you to create your idea in this repository. Create a git branch and folder with the name of your idea.
-At the end of the hackathon you are asked to illustrate your idea on two PDF slides which you will place in this folder. You can also share any code in this folder if you want to open source it.
+We encourage you to create your idea in this repository. Create a git branch and folder with the name of your idea. You can also share any code in this folder if you want to open source it.
 
 ```
 git checkout -b youridea_name
