@@ -62,3 +62,4 @@ target/
 # Rep Ignores
 .vscode/
 
+data/

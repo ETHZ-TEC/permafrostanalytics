@@ -33,6 +33,8 @@ poetry install
 
 ### Try out an example
 ```
+python utils/download_files.py -f timeseries_derived_data_products.zip
+python ideas/visualization/plot_timeseries.py
 ```
 
 ### Create your own idea

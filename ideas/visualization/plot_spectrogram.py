@@ -10,17 +10,21 @@ import numpy as np
 
 parser = argparse.ArgumentParser(description="Seismic time series and spectogram plot")
 parser.add_argument(
-    "data_folder",
-    metavar="folder_to_data",
+    "-p",
+    "--path",
     type=str,
+    default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
 args = parser.parse_args()
 
-if not args.data_folder:
-    raise RuntimeError("Please provide a path to the dataset folder")
+data_path = Path(args.path)
 
-seismic_folder = Path(args.data_folder).joinpath("seismic_data/4D/")
+seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
+
+if not seismic_folder.exists():
+    raise RuntimeError('Please provide a valid path to the permafrost data or see README how to download it')
+
 seismic_node = stuett.data.SeismicSource(
     path=seismic_folder,
     station="MH36",
