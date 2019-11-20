@@ -74,7 +74,6 @@ one_day_5cm_10cm = rock_temperature.loc[
 ]
 print(one_day_5cm_10cm)
 
-
 #### Data formats ####
 # Note: The timezone used within stuett is UTC, but the datetime objects you receive are not timezone aware.
 #       Timezone issues are a recurring problem so be careful when working with the data.

@@ -28,7 +28,6 @@ conda activate permafrost
 ### Download this repository and install the required packages
 ```
 git clone [TODO:address]
-git checkout hackathon
 poetry install
 ```
 
