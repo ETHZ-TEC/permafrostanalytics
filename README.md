@@ -34,7 +34,7 @@ On **Windows**: Some more steps are required to successfully install it on Windo
 
 ### Download this repository and install the required packages
 ```
-git clone [TODO:address]
+git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
 poetry install
 ```
 
