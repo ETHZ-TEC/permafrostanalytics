@@ -37,19 +37,19 @@ On Linux, do the following:
 ```
 git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
 cd permafrostanaltics
-poetry install -v
+poetry install -vvv
 ```
 
 ##### Windows installation
 
-As Windows has issues with the Python packages we require, we require some additional steps:
+As Windows has issues with the Python packages we use, we require some additional steps:
 
 ```
 git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
 cd permafrostanaltics
-conda install -n permafrost numcodecs -y
+conda install -n permafrost numcodecs pyyaml -y
 conda install -n permafrost -c conda-forge xarray-extras -y
-poetry install -v
+poetry install -vvv
 ```
 
 ### Try out an example
@@ -57,6 +57,9 @@ poetry install -v
 python utils/download_files.py -f timeseries_derived_data_products.zip
 python ideas/visualization/plot_timeseries.py
 ```
+
+In case your default browser doesnt render the page correctly, consider trying another browser. We recommend [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/), which delivers the most stable performance.
+On Windows, you can switch between default programs using `Control Panel → Programs → Default Programs → Set your default programs`.
 
 ### Discover
 There are more examples in the [_ideas_](./ideas) folder and some tutorials in the [_tutorial_](./tutorial) folder which we will partially go through during the hackathon.
