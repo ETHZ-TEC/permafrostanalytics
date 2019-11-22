@@ -13,10 +13,11 @@ The code you will need lives in this repository. If you want to dig deeper you c
 
 ## Quickstart
 
-To use the framework, you require the following tools:
+To use the framework, you require the following tools as prerequisites:
 
-* Python
+* Python 3.7
 * git
+* gcc
 
 We recommend [Anaconda](https://www.anaconda.com/distribution/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), the latter being a minimal (but sufficient) version of the Anaconda distribution. The following instructions will be based on Miniconda, but you can use any other Python environment.
 
@@ -25,7 +26,7 @@ We recommend [Anaconda](https://www.anaconda.com/distribution/) or [Miniconda](h
 After the installation of Anaconda, open a terminal (on Windows `Anaconda Prompt`) and create a new environment by typing:
 
 ```
-conda create -n permafrost python==3.7 git curl -y
+conda create -n permafrost python==3.7 git curl numcodecs -y
 conda activate permafrost
 pip install --pre poetry
 ```
@@ -47,7 +48,7 @@ As Windows has issues with the Python packages we use, we require some additiona
 ```
 git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
 cd permafrostanaltics
-conda install -n permafrost numcodecs pyyaml -y
+conda install -n permafrost pyyaml -y
 conda install -n permafrost -c conda-forge xarray-extras -y
 poetry install -vvv
 ```
