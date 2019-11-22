@@ -19,23 +19,18 @@ The code you will need lives in this repository. If you want to dig deeper you c
 
 We recommend [Anaconda](https://www.anaconda.com/distribution/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), the latter being a minimal (but sufficient) version of the Anaconda distribution. The following will be based on miniconda but you can use any other python environment.
 ### Create a new conda environment
-After installation of anaconda, open a terminal (on Windows Anaconda Propmt) and create a new environment with
+After installation of anaconda, open a terminal (on Windows Anaconda Prompt) and create a new environment with
+
 ```
 conda create -n permafrost python==3.7 git curl
 conda activate permafrost
 pip install --pre poetry
 ```
 
-
-On **Windows**: Some more steps are required to successfully install it on Windows
-
-```tbd```
-
-
 ### Download this repository and install the required packages
 ```
 git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
-poetry install
+poetry install -vvv
 ```
 
 ### Try out an example
