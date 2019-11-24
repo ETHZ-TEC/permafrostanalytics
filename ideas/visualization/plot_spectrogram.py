@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.'''
 
 import stuett
+from stuett.global_config import get_setting, setting_exists
 import argparse
 from pathlib import Path
 from datetime import datetime
@@ -38,17 +39,35 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
+parser.add_argument('-a', '--azure', action='store_true', help='Load data from Azure')
 args = parser.parse_args()
 
 data_path = Path(args.path)
 
-seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
 
-if not seismic_folder.exists():
-    raise RuntimeError('Please provide a valid path to the permafrost data or see README how to download it')
+if args.azure:
+    account_name = (
+        get_setting("azure")["account_name"]
+        if setting_exists("azure")
+        else "storageaccountperma8980"
+        )
+    account_key = get_setting("azure")["account_key"] if setting_exists("azure") else None
+    store = stuett.ABSStore(
+        container="hackathon-on-permafrost",
+        prefix="seismic_data/4D/",
+        account_name=account_name,
+        account_key=account_key,
+        blob_service_kwargs={},
+    )
+else:
+    seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
+    store = stuett.DirectoryStore(seismic_folder)
+    if not seismic_folder.exists():
+        raise RuntimeError('Please provide a valid path to the permafrost data or see README how to download it')
+
 
 seismic_node = stuett.data.SeismicSource(
-    path=seismic_folder,
+    store=store,
     station="MH36",
     channel=["EHE",'EHN','EHZ'],
     start_time="2017-08-01 10:00:00",

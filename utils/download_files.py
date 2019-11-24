@@ -55,7 +55,7 @@ if not args.files:
     # download all files
     print('WARNING: Downloading all files, which are several GB of data. '
           'Make sure you are using an appropriate internet connection and have enough space left on your disk')
-    files = ['timeseries_derived_data_products.zip']
+    files = ['timeseries_derived_data_products.zip', 'timelapse_images.zip', 'seismic_data.zip', 'docs.zip' ]
 else:
     files = args.files
 
