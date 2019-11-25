@@ -59,6 +59,8 @@ filename = Path(data_path).joinpath("annotations", "boundingbox_timeseries.csv")
 filename = Path(data_path).joinpath("annotations", "boundingbox_images.csv")
 label = stuett.data.BoundingBoxAnnotation(filename)
 
+
+# TODO: new class extends SegmentedDataset that gets as Input filenames and provides images
 dataset = stuett.data.SegmentedDataset(
     node,
     label,

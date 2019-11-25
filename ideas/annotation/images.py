@@ -9,6 +9,7 @@ import numpy as np
 import json
 import pandas as pd
 import os 
+import zarr 
 
 import dash_canvas
 import dash
@@ -27,7 +28,8 @@ import dash_table
 from textwrap import dedent
 import json 
 import uuid
-from skimage import io
+from skimage import io as imio
+import io, codecs
 
 parser = argparse.ArgumentParser(description="Image Annotation Tool")
 parser.add_argument(
@@ -42,57 +44,60 @@ args = parser.parse_args()
 
 data_path = Path(args.path)
 
-prefix = "timelapse_images"
-if args.azure:
-    from stuett.global_config import get_setting, setting_exists
-
-    account_name = (
-        get_setting("azure")["account_name"]
-        if setting_exists("azure")
-        else "storageaccountperma8980"
-        )
-    account_key = get_setting("azure")["account_key"] if setting_exists("azure") else None
-    store = stuett.ABSStore(
-        container="hackathon-on-permafrost",
-        prefix=prefix,
-        account_name=account_name,
-        account_key=account_key,
-        blob_service_kwargs={},
-    )
-else:
+def get_store(data_path, prefix):
     folder = Path(data_path).joinpath(prefix)
-    store = stuett.DirectoryStore(folder)
-    if not folder.exists():
-        raise RuntimeError('Please provide a valid path to the permafrost data or see README how to download it')
+    if args.azure:
+        from stuett.global_config import get_setting, setting_exists
 
+        account_name = (
+            get_setting("azure")["account_name"]
+            if setting_exists("azure")
+            else "storageaccountperma8980"
+            )
+        account_key = get_setting("azure")["account_key"] if setting_exists("azure") else None
+        store = stuett.ABSStore(
+            container="hackathon-on-permafrost",
+            prefix=prefix,
+            account_name=account_name,
+            account_key=account_key,
+            blob_service_kwargs={},
+        )
+    else:
+        store = stuett.DirectoryStore(folder)
+        if not folder.exists():
+            raise RuntimeError('Please provide a valid path to the permafrost data or see README how to download it')
+    
+    return store, folder
+
+prefix = "timelapse_images"
+store, folder = get_store(data_path,prefix)
 
 # Setting a user directory to speed up image lookup
 set_setting('user_dir', str(Path(__file__).absolute().parent.joinpath("..", "..", "data", "user_dir")))
-os.makedirs(get_setting('user_dir'),exist_ok=True)
+local_annotation_path = Path(get_setting('user_dir')).joinpath('annotations')
+os.makedirs(local_annotation_path,exist_ok=True)
+local_store = stuett.DirectoryStore(local_annotation_path)
+account_name = 'https://storageaccountperma8980.blob.core.windows.net/hackathon-public-rw'
+account_key = 'st=2019-11-25T15%3A03%3A51Z&se=2019-12-04T15%3A03%3A00Z&sp=rw&sv=2018-03-28&sr=c&sig=1q9R%2Fp9y%2B%2Fwyam3qpfBf%2BJyG0cKlZ%2B4Ta9uNnAR7hJE%3D'
 
-# node = stuett.data.MHDSLRImages(base_directory=folder, output_format='base64', start_time = pd.to_datetime('2017-04-05'), end_time = pd.to_datetime('2017-04-06'))
-node = stuett.data.MHDSLRFilenames(base_directory=folder, start_time = pd.to_datetime('2017-01-01'), end_time = pd.to_datetime('2017-12-31'))
+remote_store = None
+remote_store = stuett.ABSStore(
+            container="hackathon-public-rw",
+            prefix='',
+            account_name=account_name,
+            account_key=account_key,
+            blob_service_kwargs={},
+        )
 
-
+# node = stuett.data.MHDSLRFilenames(base_directory=folder, start_time = pd.to_datetime('2017-01-01'), end_time = pd.to_datetime('2017-12-31'))
+node = stuett.data.MHDSLRFilenames(base_directory=folder, store=store, force_write_to_remote=True, start_time = pd.to_datetime('2017-01-01'), end_time = pd.to_datetime('2017-12-31'))
 data = node()
 
-
-filename = str(folder.joinpath(data.iloc[0]['filename']).resolve())
-# print(filename)
-# filename = '/home/matthmey/repos/stuett/frontends/permafrostanalytics/data/timelapse_images/2017-01-05/20170105_080011.JPG'
-# filename = "/app/apps/remove-background/assets/dress.jpg"
-filename = 'https://bestpostarchive.com/wp-content/uploads/2019/02/driving-in-the-streets-of-san-fr-800x445.jpg'
-# filename = 'https://iclothproducts.com/products/icloth-lens-and-screen-cleaner-pro-grade-individually-wrapped-wet-wipes-wipes-for-cleaning-small-electronic-devices-like-smartphones-and-tablets'
-
-
-
-
-
-# img_app3 = img_app3[::32,::32,:]
-
-# print(type(img_app3),img_app3.dtype,img_app3.shape)
-# img_app3 = np.zeros((16,16,3),dtype='uint8')
-
+static_label_mapping = {'snow':'Snow', 'sunshine':'Sunshine'}
+mapping = {'red':'Mountaineer', 'green':'Lens Flare'}
+reverse_mapping = {v: k for k, v in mapping.items()}
+img_shape = (4288, 2848, 3)
+img_downsampling = 8
 
 app = dash.Dash(__name__)
 server = app.server
@@ -112,40 +117,6 @@ cache = Cache(app.server, config={
 })
 
 
-def store_dataframe(session_id, data):
-    @cache.memoize()
-    def query_and_serialize_data(session_id, data):
-
-        #TODO: replace with saving the data
-
-        #TODO: load the old data from the store
-
-        print(data)
-        df = pd.DataFrame(data)
-        print(df)
-
-        # images = []
-        # times = []
-        # for timestamp, element in filenames.iterrows():
-        #     filename = Path(self.config["base_directory"]).joinpath(element.filename)
-        #     img = Image.open(filename)
-        #     images.append(np.array(img))
-        #     times.append(timestamp)
-
-        # images = np.array(images)
-        # data = xr.DataArray(
-        #     images, coords={"time": times}, dims=["time", "x", "y", "c"], name="Image"
-        # )
-        # data.attrs["format"] = "jpg"
-
-
-                
-
-        return 
-
-    return query_and_serialize_data(session_id, data)
-
-
 # TODO: delete
 list_columns = ['width', 'height', 'left', 'top', 'label']
 columns = [{"name": i, "id": i} for i in list_columns]
@@ -159,66 +130,49 @@ def serve_layout():
             html.Div(session_id, id='session-id', style={'display': 'none'}),
             html.Div([], id='storage', style={'display': 'none'}),
             html.H3('Permafrost Image Annotation'),
-            dcc.DatePickerSingle(
-                id='my-date-picker-single',
-                min_date_allowed=stuett.to_datetime("2017-01-01"),
-                max_date_allowed=stuett.to_datetime("2017-12-31"),
-                initial_visible_month=stuett.to_datetime("2017-01-01"),
-                date="2017-01-01",
-                display_format='Y-MM-DD',
-            ),html.Div(id='date_indicator'),
-            dash_canvas.DashCanvas(
-                id='canvas',
-                width=500,
-                tool="select",
-                lineWidth=2,
-                # json_data_in=json_template,
-                # filename=filename,
-                hide_buttons=['pencil', 'line'],
-                goButtonTitle='Get coordinates',
-                updateButtonTitle='MuUpdat'
-                ),
-                ], className="six columns"),
+            html.Div([
+                html.Div([
+                    dcc.DatePickerSingle(
+                    id='my-date-picker-single',
+                    min_date_allowed=stuett.to_datetime("2017-01-01"),
+                    max_date_allowed=stuett.to_datetime("2017-12-31"),
+                    initial_visible_month=None,
+                    date="2017-01-01",
+                    display_format='Y-MM-DD',
+                )],style={'width':'50%', 'display': 'inline-block'}),
+                html.Div(id='date_indicator',style={'width':'50%', 'display': 'inline-block'})
+            ]),
+            html.Div([
+                dash_canvas.DashCanvas(
+                    id='canvas',
+                    width=500,
+                    tool="select",
+                    lineWidth=2,
+                    # json_data_in=json_template,
+                    # filename=filename,
+                    hide_buttons=['pencil', 'line']),
+                    ],style={'text-align':'center'}),
+        ]),
         html.Div([
             dcc.Dropdown(
                 id='bb_label_dropdown',
-                options=[
-                    {'label': 'Mountaineer', 'value': 'red'},
-                    {'label': 'Lens Flare', 'value': 'green'},
-                ],
+                options=[ {'label': mapping[m], 'value': m} for m in mapping.keys()],
                 value='red'
             ),
             dcc.Dropdown(
                 id='static_label_dropdown',
-                options=[
-                    {'label': 'Snow', 'value': 'snow'},
-                    {'label': 'Sunshine', 'value': 'sunshine'},
-                ],
+                options=[ {'label': static_label_mapping[m], 'value': m} for m in static_label_mapping.keys()],
                 value=[],
                 multi=True
             ),
             dcc.Store(id='cache',data=0),
             dcc.Store(id='index',data=0),
             dcc.Store(id='sync',data=True),
-            html.Div(id='loop_breaker_container', children=[]),
-            # dash_table.DataTable(
-            #     id='table',
-            #     columns=columns,
-            #     editable=True,
-            #     row_deletable=True,
-            #     dropdown={
-            #             'label':{
-            #             'options': [
-            #                 {'label': i, 'value': i}
-            #                 for i in ['car', 'truck', 'bike', 'pedestrian']
-            #             ]
-            #         },
-            #     }
-            #     ),
+ 
             ], className="six columns"),
             dcc.Markdown("Annotate by selecting per picture labels or draw bounding boxes with the rectangle tool"
                         "Note: Rotating bounding boxes will result in incorrect labels."
-            )],# Div
+            )],style={'width':'50%'},# Div
         className="row")
     
     return layout
@@ -231,10 +185,10 @@ app.layout = serve_layout
 
 
 @app.callback(
-    Output('canvas', 'lineColor'),
+    [Output('canvas', 'lineColor'),Output('bb_label_dropdown', 'style')],
     [Input('bb_label_dropdown', 'value')])
 def update_output(value):
-    return value
+    return value, {'color':value}
 
 @app.callback(
     Output('static_label_dropdown', 'style'),
@@ -242,35 +196,6 @@ def update_output(value):
 def update_output(value):
     print(value)
     raise PreventUpdate
-
-# @app.callback(Output('cities', 'values'),
-#               [Input('all', 'values')])
-# def update_cities(inputs):
-#     if len(inputs) == 0:
-#         return []
-#     else:
-#         return ['NYC', 'MTL', 'SF']
-
-# # Thanks to HadoopMarc 
-# @app.callback(Output('loop_breaker_container', 'children'),
-#               [Input('cities', 'values')],
-#               [State('all', 'values')])
-# def update_all(inputs, _):
-#     states = dash.callback_context.states
-#     if len(inputs) == 3 and states['all.values'] == []:
-#         return [html.Div(id='loop_breaker', children=True)]
-#     elif len(inputs) == 0 and states['all.values'] == ['all']:
-#         return [html.Div(id='loop_breaker', children=False)]
-#     else:
-#         return []
-
-# @app.callback(Output('all', 'values'),
-#               [Input('loop_breaker', 'children')])
-# def update_loop(all_true):
-#     if all_true:
-#         return ['all']
-#     else:
-#         return []
 
 @app.callback(Output('my-date-picker-single','date'),
               [Input('canvas', 'prev_trigger'), Input('canvas', 'next_trigger')],[State('index','data')])
@@ -304,10 +229,78 @@ def reduce_help(prev_trigger,next_trigger,index):
 
     return datetime
 
+def parse_labels(string,mapping, static_label):
+    """Returns array of rectangles geometry and their labels
+    
+    Arguments:
+        string {str} -- JSON string
+        mapping {dict} -- Mapping from color to label
+        static_label {list} -- List of labels valid for the whole image
+    
+    Returns:
+        ndarray -- array containing rectangle information
+    """
+    try:
+        data = json.loads(string)
+    except:
+        return None
+    scale = 1
+    img_width = 1
+    img_height = 1
+    props = []
+
+    for obj in data['objects']:
+        if obj['type'] == 'image':
+            # print('img')
+            # print(obj['scaleX'],obj['scaleY'],obj['width'],obj['height'])
+            # scale = obj['scaleX']
+            img_width  = obj['width']
+            img_height = obj['height']
+
+    for obj in data['objects']:     
+        if obj['type'] == 'rect':
+            print(obj)
+            # scale_factor = obj['scaleX'] / scale
+            try:
+                label = mapping[obj['stroke']]
+            except:
+                raise RuntimeError(f'Could not find mapping for {obj["stroke"]}')
+            item = [obj['right'],
+                    obj['bottom'],
+                    obj['left'],
+                    obj['top']]
+
+            print(item)
+
+            item = np.array(item)
+            # convert ltwh to corner points (ltrb)
+            # item[0] = item[0] + item[2]
+            # item[1] = item[1] + item[3]
+
+            # item = scale_factor * item
+
+            # item[0], item[2] = item[0] / img_width, item[2] / img_width
+            # item[1], item[3] = item[1] / img_height, item[3] / img_height
+
+            item = item.tolist()
+            item += [label]
+
+            props.append(item)
+
+    if static_label is not None:
+        for item in static_label:
+            props.append([1,1,0,0,item])
+
+    print('props', props)
+    return (np.array(props))
+
+
 @app.callback(
     [Output('canvas', 'id')],
-    [Input('canvas', 'json_data_out'),Input('session-id', 'children')])
-def get_json(data,session_id):
+    [Input('canvas', 'json_data_out'),Input('session-id', 'children'),Input('static_label_dropdown','value')],
+    [State('index','data')])
+def get_json(json_data_out,session_id,static_label,index):
+    global mapping, data
     ctx = dash.callback_context
 
     if not ctx.triggered:
@@ -317,18 +310,46 @@ def get_json(data,session_id):
 
     if prop_id != 'canvas.json_data_out':
         raise PreventUpdate
-
-    print(session_id)
-    props = parse_jsonstring_rectangle(data)
     
-    df = store_dataframe(session_id, props)
+    print('static',static_label)
+    props = parse_labels(json_data_out, mapping, static_label)
+
+    datetime = data.index[index]
+    
+    df = pd.DataFrame(props,columns= ['end_x','end_y','start_x','start_y','__target'])
+    df['start_time'] = datetime
+    df['end_time']  = datetime
+
+    file_id = datetime.strftime("%Y%m%d_%H%M%S")
+    to_csv(df, session_id,file_id)
+
     raise PreventUpdate 
 
+def to_csv(df, session_id, file_id=None):
+    global local_store
+    if file_id is None:
+        file_id = uuid.uuid4()
+
+    filename = session_id+f'/data/{file_id}.csv'
+
+    stuett.to_csv_with_store(local_store,filename,df)
+    if remote_store is not None:
+        stuett.to_csv_with_store(remote_store,filename,df)
+
+def read_csv(session_id, file_id):
+    global local_store
+    filename = session_id+f'/data/{file_id}.csv'
+    return stuett.read_csv_with_store(local_store,filename)
+
 @app.callback(
-    [Output('canvas', 'json_data_in'), Output('index', 'data'), Output('date_indicator','children')],
-    [Input('my-date-picker-single', 'date')])
-def update_output(date):
+    [Output('canvas', 'json_data_in'), Output('index', 'data'), Output('date_indicator','children'), Output('static_label_dropdown','value')],
+    [Input('my-date-picker-single', 'date'),Input('session-id', 'children')])
+def update_output(date,session_id):
     global data, folder
+
+    static_label = [] 
+    info_box = 'No info'
+
     if date is not None:
         print(date)
         index = data.index.get_loc(date, method="nearest")
@@ -336,123 +357,68 @@ def update_output(date):
 
         if isinstance(index,slice):
             index =  index.start
-
-        print('clicked')
-
-        info_box = str(data.index[index])
     
         filename = str(folder.joinpath(data.iloc[index]['filename']).resolve())
-
+        
         try:
-            img = io.imread(filename)
+            key = data.iloc[index]['filename']
+            img = imio.imread(io.BytesIO(store[key]))
             print(img.shape)
-        except:
+        except Exception as e:
+            print(e)
             info_box = "Error loading the image"
-            img = np.zeros((4288, 2848, 3),dtype='uint8')
-            
-        img = img[::8,::8,:]
+            img = np.zeros(img_shape,dtype='uint8')
+        
+
+        img = img[::img_downsampling,::img_downsampling,:]
         image_content = array_to_data_url(img)
 
         # load data from index
-        start_and_image = '{"version":"2.4.3","objects":[{"type":"image","version":"2.4.3","originX":"left","originY":"top","left":0,"top":0,"width":%d,"height":%d,"src":"%s"},'%(img.shape[1],img.shape[0],image_content)
-        rect = '{"type":"rect","version":"2.4.3","originX":"left","originY":"top","left":34,"top":41.57,"width":44,"height":47,"fill":"transparent","stroke":"%s","strokeWidth":2}'%("red")
+        start_and_image = '{"version":"2.4.3","objects":[{"type":"image","version":"2.4.3", "originX":"left","originY":"top","left":0,"top":0,"width":%d,"height":%d,"src":"%s"}'%(img.shape[1],img.shape[0],image_content)
+
+        datetime = data.index[index]
+        file_id = datetime.strftime("%Y%m%d_%H%M%S")
+        rectangles = ['']
+        try:
+            df = read_csv(session_id, file_id)
+        except:
+            df = None
+            pass
+
+        if df is not None:
+            print(df)
+            rects = []
+            for i,row in df.iterrows():
+                if row['__target'] in static_label_mapping:
+                    static_label.append(row['__target'])
+                    continue
+
+                left = row['start_x']
+                top = row['start_y']
+                right = row['end_x']
+                bottom = row['end_y']
+
+                stroke = reverse_mapping[str(row['__target'])]
+                rect = ',{"type":"rect","version":"2.4.3","originX":"left","originY":"top","left":%f,"top":%f,"right":%f,"bottom":%f,"width":0,"height":0,"fill":"transparent","stroke":"%s","strokeWidth":2}'%(left,top,right,bottom,stroke)
+
+                rects.append(rect)
+            
+            if rects:
+                rectangles = rects
+
+            print(rects)
+
         end_objects = ']}'
 
-        json_data = ''.join([start_and_image, rect, end_objects])
+        string = [start_and_image]
+        string += rectangles
+        string += [end_objects]
 
-        return json_data, index, info_box
+        json_data = ''.join(string)
+
+        return json_data, index, str(datetime), static_label
 
     raise PreventUpdate
-
-
-# @app.callback(Output('canvas', 'lineWidth'),
-#               [Input('canvas', 'json_data_in')])
-# def reduce_help(json_data_in):
-#     # print(json_data_in)
-#     raise PreventUpdate
-
-# @app.callback(Output('table', 'data'),
-# @app.callback(Output('cache', 'data'),
-#               [Input('canvas', 'json_data_in')],[State('cache','data')])
-# def show_string(string,cache):
-#     print(cache)
-#     props = parse_jsonstring_rectangle(string)
-#     df = pd.DataFrame(props, columns=list_columns[:-1])
-#     df['type'] = cache['type']
-#     return df.to_dict("records")
-
-
-# @app.callback([Output('cache', 'data'),Output('sync', 'data')],
-#               [Input('table', 'data'),Input('canvas', 'json_data_in')],[State('sync','data')])
-# def show_string(tabledata,string,sync):
-#     if sync:
-#         raise PreventUpdate
-#     props = parse_jsonstring_rectangle(string)
-#     print(tabledata,props,cache)
-#     df = pd.DataFrame(props, columns=list_columns[:-1])
-#     df['type'] = 'car'
-
-#     return df.to_dict("records"), True
-
-
-# @app.callback([Output('table', 'data'),Output('canvas', 'json_data_in')],
-#               [Input('cache', 'data')],[State('sync','data')])
-# def sync(cache,sync):
-#     props = parse_jsonstring_rectangle(string)
-#     print(tabledata,props,cache)
-#     df = pd.DataFrame(props, columns=list_columns[:-1])
-#     df['type'] = 'car'
-
-#     return df.to_dict("records")
-
-
-# @app.callback(Output('img-help', 'width'),
-#               [Input('canvas', 'json_data_in')])
-# def reduce_help(json_data_in):
-#     if json_data_in:
-#         return '0%'
-#     else:
-#         raise PreventUpdate
-
-# @app.callback([Output('table', 'data'),Output('json_data_in', 'data')],
-#               [Input('table', 'data')],[State('cache','data')])
-# def show_string(string,cache):
-#     print(cache)
-#     props = parse_jsonstring_rectangle(string)
-#     df = pd.DataFrame(props, columns=list_columns[:-1])
-#     df['type'] = 'car'
-#     return df.to_dict("records")
-
-
-
-
-
-# 
-# @app.callback(Output('canvas', 'json_data_in'),
-#             [Input('table', 'derived_virtual_indices'),
-#              Input('table', 'active_cell'),
-#              Input('table', 'data')]
-#             )
-# def highlight_filter(indices, cell_index, data):
-#     print(indices, cell_index, data)
-#     return data
-
-
-# @app.callback(Output('table-line', 'style_data_conditional'),
-#              [Input('graph', 'hoverData')])
-# def higlight_row(string):
-#     """
-#     When hovering hover label, highlight corresponding row in table,
-#     using label column.
-#     """
-#     index = string['points'][0]['z']
-#     return  [{
-#         "if": {
-#                 'filter': 'label eq num(%d)'%index
-#             },
-#         "backgroundColor": "#3D9970",
-#         'color': 'white'
-#         }]
 
 
 if __name__ == '__main__':
