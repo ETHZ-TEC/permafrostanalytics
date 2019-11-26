@@ -3,10 +3,10 @@
 ## Organisation
 
 ### Communication
-For discussions during and after the hackathon please use the [chat room](https://matrix.to/#/!DncqFOaoXsgUnageDH:matrix.ee.ethz.ch?via=matrix.ee.ethz.ch).
+For discussions during and after the hackathon please use the [chat room](https://riot.im/app/#/room/!DncqFOaoXsgUnageDH:matrix.ee.ethz.ch?via=matrix.ee.ethz.ch).
 
 ### Data
-During the hackathon, the data will be available [here](). We will move the data to a permanent, public storage location after the hackathon.
+During the hackathon, the data will be available [here](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/README.md). We will move the data to a permanent, public storage location after the hackathon.
 
 ### Code
 The code you will need lives in this repository. If you want to dig deeper you can also have a look at the code for our data management package [stuett](https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/stuett).
@@ -70,3 +70,26 @@ git checkout -b youridea_name
 mkdir ideas/youridea_name
 cd ideas/youridea_name
 ```
+
+## Need more...
+
+### References
+
+### Data
+* Using the scripts from this repo, most of the data from [here](https://doi.pangaea.de/10.1594/PANGAEA.897640?format=html#download) can be used plug and play.
+* If you have access to the [arclink service](http://arclink.ethz.ch), you can use it to download seismic streams. There is an explanation in the file [ideas/visualization/plot_spectrogram.py](./ideas/visualization/plot_spectrogram.py).
+* 
+
+### Code
+
+
+### Tools
+Check out the many open-source tools available online. The ones we use and found most useful are
+* [python](https://www.python.org/)
+* [xarray](http://xarray.pydata.org/)
+* [dask](https://dask.org/)
+* [pytorch](https://pytorch.org/)
+* [plotly](https://plot.ly)/[dash](https://plot.ly/dash/)
+* [zarr](https://zarr.readthedocs.io/en/stable/index.html)
+* [pandas](https://pandas.pydata.org/)
+* [obspy](https://github.com/obspy/obspy/wiki)/[obsplus](https://github.com/niosh-mining/obsplus)

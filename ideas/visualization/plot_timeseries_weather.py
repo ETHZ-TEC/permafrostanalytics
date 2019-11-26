@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
 import stuett
+from stuett.global_config import get_setting, setting_exists
 import argparse
 from pathlib import Path
 from datetime import datetime
@@ -35,21 +36,39 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data")),
     help="The path to the folder containing the permafrost hackathon data",
 )
+parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
 args = parser.parse_args()
-
 data_path = Path(args.path)
 
-timeseries_folder = Path(data_path).joinpath("timeseries_derived_data_products")
-vaisalawxt520windpth_file = timeseries_folder.joinpath(
-    "MH25_vaisalawxt520windpth_2017.csv"
-)
+# change here to get data from another sensor
+vaisalawxt520windpth_file = "MH25_vaisalawxt520windpth_2017.csv"
 
-if not vaisalawxt520windpth_file.exists():
-    raise RuntimeError(
-        "Please provide a valid path to the permafrost data or see README how to download it"
+# Getting either cloud or local data file
+if not args.local:
+    account_name = (
+        get_setting("azure")["account_name"]
+        if setting_exists("azure")
+        else "storageaccountperma8980"
     )
+    account_key = (
+        get_setting("azure")["account_key"] if setting_exists("azure") else None
+    )
+    store = stuett.ABSStore(
+        container="hackathon-on-permafrost",
+        prefix="timeseries_derived_data_products",
+        account_name=account_name,
+        account_key=account_key,
+        blob_service_kwargs={},
+    )
+else:
+    timeseries_folder = Path(data_path).joinpath("timeseries_derived_data_products").resolve()
+    store = stuett.DirectoryStore(timeseries_folder)
+    if vaisalawxt520windpth_file not in store:
+        raise RuntimeError(
+            "Please provide a valid path to the permafrost data or see README how to download it"
+        )
 
-vaisalawxt520windpth_node = stuett.data.CsvSource(vaisalawxt520windpth_file)
+vaisalawxt520windpth_node = stuett.data.CsvSource(vaisalawxt520windpth_file,store=store)
 vaisalawxt520windpth = vaisalawxt520windpth_node()
 
 # Create figure

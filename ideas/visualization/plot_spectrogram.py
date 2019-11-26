@@ -39,13 +39,13 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
-parser.add_argument("-a", "--azure", action="store_true", help="Load data from Azure")
+parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
 args = parser.parse_args()
 
 data_path = Path(args.path)
 
 
-if args.azure:
+if not args.local:
     account_name = (
         get_setting("azure")["account_name"]
         if setting_exists("azure")
@@ -64,7 +64,7 @@ if args.azure:
 else:
     seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
     store = stuett.DirectoryStore(seismic_folder)
-    if not seismic_folder.exists():
+    if "MH36/2017/EHE.D/4D.MH36.A.EHE.D.20171231_230000.miniseed" not in store:
         raise RuntimeError(
             "Please provide a valid path to the permafrost data or see README how to download it"
         )
@@ -78,6 +78,23 @@ seismic_node = stuett.data.SeismicSource(
     end_time="2017-08-01 10:01:00",
 )
 
+''' If you have access to the [arclink service](arclink.ethz.ch/) you can use it to load your data
+    You can use the following two lines of code, but be careful not to accidentally publish your password!
+    ```
+    stuett.global_config.set_setting("arclink", {"user": "yourusername", "password":"yourpassword"})
+    seismic_node = stuett.data.SeismicSource(use_arclink=True,store=....)
+    ```
+
+    Better create a stuett config.yml file in your application folder which contains the line
+    ```
+    arclink: {"user": "yourusername", "password":"yourpassword"}
+    ```
+    The right location of the config file can be found by executing
+    ```
+    python -c "import stuett;print(stuett.global_config.get_user_config_file())"
+    ```'''
+
+
 seismic_data = seismic_node()
 
 print(seismic_data)
@@ -89,7 +106,7 @@ fig.update_layout(title_text="Time series and spectrogram")
 for i, seed_id in enumerate(seismic_data["seed_id"]):
     for j, stream_id in enumerate(seismic_data["stream_id"]):
         fig.add_trace(
-            go.Scatter(
+            go.Scatter(name = str(seed_id.values),
                 x=pd.to_datetime(seismic_data["time"].values),
                 y=seismic_data.sel(seed_id=seed_id, stream_id=stream_id).values,
             ),
