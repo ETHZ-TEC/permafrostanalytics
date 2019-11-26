@@ -25,6 +25,8 @@ stuett = { git = "https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/stu
 azure-storage-blob = "2.1.0"
 wget = "^3.2"
 plotly = "^4.3.0"
+flask_caching = "^1.7.2"
+dash-canvas = {git = "https://github.com/niowniow/dash-canvas" }
 
 # Optional dependencies (extras)
 

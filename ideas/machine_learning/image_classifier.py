@@ -21,15 +21,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
 import stuett
-from stuett.global_config import get_setting, setting_exists
+from stuett.global_config import get_setting, setting_exists, set_setting
+
 import argparse
 from pathlib import Path
-from datetime import datetime
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
-import pandas as pd
 import numpy as np
+import json
+import pandas as pd
+import os
+
 
 parser = argparse.ArgumentParser(description="Seismic time series and spectogram plot")
 parser.add_argument(
@@ -44,8 +45,10 @@ args = parser.parse_args()
 
 data_path = Path(args.path)
 
-
+prefix = "timelapse_images"
 if args.azure:
+    from stuett.global_config import get_setting, setting_exists
+
     account_name = (
         get_setting("azure")["account_name"]
         if setting_exists("azure")
@@ -56,62 +59,48 @@ if args.azure:
     )
     store = stuett.ABSStore(
         container="hackathon-on-permafrost",
-        prefix="seismic_data/4D/",
+        prefix=prefix,
         account_name=account_name,
         account_key=account_key,
         blob_service_kwargs={},
     )
 else:
-    seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
-    store = stuett.DirectoryStore(seismic_folder)
-    if not seismic_folder.exists():
+    folder = Path(data_path).joinpath(prefix)
+    store = stuett.DirectoryStore(folder)
+    if not folder.exists():
         raise RuntimeError(
             "Please provide a valid path to the permafrost data or see README how to download it"
         )
 
 
-seismic_node = stuett.data.SeismicSource(
-    store=store,
-    station="MH36",
-    channel=["EHE", "EHN", "EHZ"],
-    start_time="2017-08-01 10:00:00",
-    end_time="2017-08-01 10:01:00",
+# Setting a user directory to speed up image lookup
+set_setting(
+    "user_dir",
+    str(Path(__file__).absolute().parent.joinpath("..", "..", "data", "user_dir")),
+)
+os.makedirs(get_setting("user_dir"), exist_ok=True)
+
+node = stuett.data.MHDSLRImages(
+    base_directory=folder,
+    output_format="xarray",
+    start_time=pd.to_datetime("2017-05-10 11:00:00"),
+    end_time=pd.to_datetime("2017-05-12"),
+)
+# node = stuett.data.MHDSLRFilenames(base_directory=folder, start_time = pd.to_datetime('2017-05-10 11:00:00'), end_time = pd.to_datetime('2017-05-12'))
+
+
+filename = Path(data_path).joinpath("annotations", "boundingbox_timeseries.csv")
+filename = Path(data_path).joinpath("annotations", "boundingbox_images.csv")
+label = stuett.data.BoundingBoxAnnotation(filename)
+
+
+# TODO: new class extends SegmentedDataset that gets as Input filenames and provides images
+dataset = stuett.data.SegmentedDataset(
+    node,
+    label,
+    dataset_slice={"time": slice("2017-05-10", "2017-05-12")},
+    batch_dims={"time": pd.to_timedelta(1, "H")},
 )
 
-seismic_data = seismic_node()
-
-print(seismic_data)
-# Create figure
-
-fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1)
-fig.update_layout(title_text="Time series and spectrogram")
-
-for i, seed_id in enumerate(seismic_data["seed_id"]):
-    for j, stream_id in enumerate(seismic_data["stream_id"]):
-        fig.add_trace(
-            go.Scatter(
-                x=pd.to_datetime(seismic_data["time"].values),
-                y=seismic_data.sel(seed_id=seed_id, stream_id=stream_id).values,
-            ),
-            row=1,
-            col=1,
-        )
-
-
-spectrogram = stuett.data.Spectrogram(nfft=512, stride=64, dim="time")
-spec = spectrogram(seismic_data)
-
-# select only one channel
-spec = spec.sel(seed_id="4D.MH36.A.EHE", stream_id=0)
-
-trace_hm = go.Heatmap(
-    x=pd.to_datetime(spec["time"].values),
-    y=spec["frequency"].values,
-    z=np.log(spec.values),
-    colorscale="Jet",
-    hoverinfo="none",
-    colorbar={"title": "Power Spectrum/dB"},
-)
-fig.add_trace(trace_hm, row=2, col=1)
-
-fig.show()
+x = dataset[0]
+print(x.shape)

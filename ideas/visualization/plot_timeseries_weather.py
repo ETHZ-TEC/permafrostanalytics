@@ -40,29 +40,31 @@ args = parser.parse_args()
 data_path = Path(args.path)
 
 timeseries_folder = Path(data_path).joinpath("timeseries_derived_data_products")
-rock_temperature_file = timeseries_folder.joinpath("MH30_temperature_rock_2017.csv")
+vaisalawxt520windpth_file = timeseries_folder.joinpath(
+    "MH25_vaisalawxt520windpth_2017.csv"
+)
 
-if not rock_temperature_file.exists():
+if not vaisalawxt520windpth_file.exists():
     raise RuntimeError(
         "Please provide a valid path to the permafrost data or see README how to download it"
     )
 
-rock_temperature_node = stuett.data.CsvSource(rock_temperature_file)
-rock_temperature = rock_temperature_node()
+vaisalawxt520windpth_node = stuett.data.CsvSource(vaisalawxt520windpth_file)
+vaisalawxt520windpth = vaisalawxt520windpth_node()
 
 # Create figure
-# rock_temperature = rock_temperature.loc[:,['temperature_5cm','temperature_10cm','temperature_100cm']]
-rock_temperature = rock_temperature.drop(dim="name", labels=["position"])
+# vaisalawxt520windpth = vaisalawxt520windpth.loc[:,['temperature_5cm','temperature_10cm','temperature_100cm']]
+vaisalawxt520windpth = vaisalawxt520windpth.drop(dim="name", labels=["position"])
 
 fig = go.Figure()
-for i in range(rock_temperature.shape[1]):
+for i in range(vaisalawxt520windpth.shape[1]):
     fig.add_trace(
         go.Scatter(
-            x=pd.to_datetime(rock_temperature["time"].values),
-            y=rock_temperature.values[:, i],
-            name=rock_temperature["name"].values[i]
+            x=pd.to_datetime(vaisalawxt520windpth["time"].values),
+            y=vaisalawxt520windpth.values[:, i],
+            name=vaisalawxt520windpth["name"].values[i]
             + " ["
-            + rock_temperature["unit"].values[i]
+            + vaisalawxt520windpth["unit"].values[i]
             + "]",
         )
     )
