@@ -20,11 +20,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
+import stuett
+from stuett.global_config import get_setting, setting_exists
+
 from azure.storage.blob import (
     BlockBlobService,
 )  # make sure to install 2.1 version with `pip install azure-storage-blob==2.1.0`
 import zarr
-from stuett.global_config import get_setting, setting_exists
 
 
 account_name = (
@@ -47,15 +49,14 @@ generator = block_blob_service.list_blobs("hackathon-on-permafrost")
 for blob in generator:
     print("\t Blob name: " + blob.name)
 
-# Create a zarr store and load the data from the zarr (needs special permissions)
-store = zarr.ABSStore(
+# Create a zarr store and load the data from the 
+store = stuett.ABSStore(
     container="hackathon-on-permafrost",
     prefix="dataset/",
     account_name=account_name,
     account_key=account_key,
     blob_service_kwargs={},
 )
-root = zarr.group(store=store, overwrite=False)
 
 # # using azure-storage-blob==12.0.0
 # # untested

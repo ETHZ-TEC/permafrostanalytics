@@ -65,12 +65,12 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
-parser.add_argument("-a", "--azure", action="store_true", help="Load data from Azure")
+parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
 args = parser.parse_args()
 
 data_path = Path(args.path)
 
-if args.azure:
+if not args.local:
     from stuett.global_config import get_setting, setting_exists
 
     account_name = (
@@ -98,16 +98,14 @@ if args.azure:
 
 else:
     store = stuett.DirectoryStore(Path(data_path).joinpath("timelapse_images"))
-    if not "" in store:
-        raise RuntimeError(
-            "Please provide a valid path to the permafrost annotation data or see README how to download it"
-        )
-    annotation_store = stuett.DirectoryStore(Path(data_path).joinpath("annotations"))
-    if not "" in annotation_store:
+    if "2017-01-01/20170101_080018.JPG" not in store:
         raise RuntimeError(
             "Please provide a valid path to the permafrost timelapse_images data or see README how to download it"
         )
-
+    annotation_store = stuett.DirectoryStore(Path(data_path).joinpath("annotations"))
+    if "annotations.csv" not in annotation_store:
+        print("WARNING: Please provide a valid path to the permafrost annotation data or see README how to download it"
+        )
 
 # Setting a user directory to speed up image lookup
 set_setting(
@@ -142,6 +140,7 @@ data = stuett.data.MHDSLRFilenames(
     end_time=pd.to_datetime("2017-12-31"),
 )()
 
+# These are all the labels that are available to the tool
 static_label_mapping = {
     "snow": "Snow",
     "sunshine": "Sunshine",
@@ -150,14 +149,15 @@ static_label_mapping = {
 }
 reverse_static_label_mapping = {v: k for k, v in static_label_mapping.items()}
 
-mapping = {"red": "Mountaineer", "green": "Lens Flare"}
-reverse_mapping = {v: k for k, v in mapping.items()}
+# These are all the labels for which bounding boxes can be drawn
+bb_label_mapping = {"red": "Mountaineer", "green": "Lens Flare"}
+bb_label_reverse_mapping = {v: k for k, v in bb_label_mapping.items()}
 img_shape = (4288, 2848, 3)
 img_downsampling = 8
 
 app = dash.Dash(__name__)
 server = app.server
-# app.config.suppress_callback_exceptions = True
+app.config.suppress_callback_exceptions = True
 
 
 def serve_layout():
@@ -216,7 +216,7 @@ def serve_layout():
                     dcc.Dropdown(
                         id="bb_label_dropdown",
                         options=[
-                            {"label": mapping[m], "value": m} for m in mapping.keys()
+                            {"label": bb_label_mapping[m], "value": m} for m in bb_label_mapping.keys()
                         ],
                         value="red",
                     ),
@@ -316,12 +316,12 @@ def reduce_help(prev_trigger, next_trigger, index):
     return datetime
 
 
-def parse_labels(string, mapping, static_label):
+def parse_labels(string, bb_label_mapping, static_label):
     """Returns array of rectangles geometry and their labels
     
     Arguments:
         string {str} -- JSON string
-        mapping {dict} -- Mapping from color to label
+        bb_label_mapping {dict} -- Mapping from color to label
         static_label {list} -- List of labels valid for the whole image
     
     Returns:
@@ -348,10 +348,10 @@ def parse_labels(string, mapping, static_label):
         if obj["type"] == "rect":
             # scale_factor = obj['scaleX'] / scale
             try:
-                label = mapping[obj["stroke"]]
+                label = bb_label_mapping[obj["stroke"]]
                 label = reverse_static_label_mapping[label]
             except:
-                raise RuntimeError(f'Could not find mapping for {obj["stroke"]}')
+                raise RuntimeError(f'Could not find bb_label_mapping for {obj["stroke"]}')
             item = [obj["right"], obj["bottom"], obj["left"], obj["top"]]
 
             item = np.array(item)
@@ -387,7 +387,7 @@ def parse_labels(string, mapping, static_label):
     [State("index", "data")],
 )
 def get_json(json_data_out, session_id, static_label, user_id, index):
-    global mapping, data
+    global bb_label_mapping, data
     ctx = dash.callback_context
 
     if not ctx.triggered:
@@ -399,7 +399,7 @@ def get_json(json_data_out, session_id, static_label, user_id, index):
         raise PreventUpdate
 
     print("static", static_label)
-    props = parse_labels(json_data_out, mapping, static_label)
+    props = parse_labels(json_data_out, bb_label_mapping, static_label)
 
     datetime = data.index[index]
 
@@ -526,9 +526,9 @@ def update_output(date, session_id):
                     continue
 
                 label = static_label_mapping[str(row["__target"])]
-                if label not in reverse_mapping:
+                if label not in bb_label_reverse_mapping:
                     continue
-                stroke = reverse_mapping[label]
+                stroke = bb_label_reverse_mapping[label]
                 rect = (
                     ',{"type":"rect","version":"2.4.3","originX":"left","transparentCorners":false,"originY":"top","left":%f,"top":%f,"right":%f,"bottom":%f,"width":0,"height":0,"fill":"transparent","stroke":"%s","strokeWidth":2}'
                     % (left, top, right, bottom, stroke)
