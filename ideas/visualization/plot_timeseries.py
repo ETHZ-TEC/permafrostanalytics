@@ -1,6 +1,6 @@
-'''MIT License
+"""MIT License
 
-Copyright (c) 2019, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2019, Swiss Federal Institute of Technology (ETH Zurich), Matthias Meyer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.'''
+SOFTWARE."""
 
 import stuett
 import argparse
@@ -43,7 +43,9 @@ timeseries_folder = Path(data_path).joinpath("timeseries_derived_data_products")
 rock_temperature_file = timeseries_folder.joinpath("MH30_temperature_rock_2017.csv")
 
 if not rock_temperature_file.exists():
-    raise RuntimeError('Please provide a valid path to the permafrost data or see README how to download it')
+    raise RuntimeError(
+        "Please provide a valid path to the permafrost data or see README how to download it"
+    )
 
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file)
 rock_temperature = rock_temperature_node()
@@ -58,7 +60,10 @@ for i in range(rock_temperature.shape[1]):
         go.Scatter(
             x=pd.to_datetime(rock_temperature["time"].values),
             y=rock_temperature.values[:, i],
-            name=rock_temperature['name'].values[i] + ' [' + rock_temperature['unit'].values[i] + ']'
+            name=rock_temperature["name"].values[i]
+            + " ["
+            + rock_temperature["unit"].values[i]
+            + "]",
         )
     )
 

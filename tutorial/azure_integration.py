@@ -1,6 +1,6 @@
-'''MIT License
+"""MIT License
 
-Copyright (c) 2019, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2019, Swiss Federal Institute of Technology (ETH Zurich), Matthias Meyer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.'''
+SOFTWARE."""
 
 from azure.storage.blob import (
     BlockBlobService,
@@ -47,7 +47,7 @@ generator = block_blob_service.list_blobs("hackathon-on-permafrost")
 for blob in generator:
     print("\t Blob name: " + blob.name)
 
-# Create a zarr store and load the data from the zarr
+# Create a zarr store and load the data from the zarr (needs special permissions)
 store = zarr.ABSStore(
     container="hackathon-on-permafrost",
     prefix="dataset/",
