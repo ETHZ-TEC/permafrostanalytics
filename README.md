@@ -54,8 +54,14 @@ poetry install -vvv
 
 ### Try out an example
 ```
-python utils/download_files.py -f timeseries_derived_data_products.zip
 python ideas/visualization/plot_timeseries.py
+```
+
+The script connects to the data repository on Azure. If you want to use the script without an internet connection you can download the files once, and run the script with the local option as shown below.
+
+```
+python utils/download_files.py -f timeseries_derived_data_products.zip
+python ideas/visualization/plot_timeseries.py -l
 ```
 
 ### Discover
