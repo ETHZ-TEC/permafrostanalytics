@@ -1,4 +1,4 @@
-# PermafrostAnalytics: Repository for the Permafrost Hackathon
+# PermafrostAnalytics: Repository for the Hackathon on Permafrost
 
 ## Organisation
 
@@ -8,8 +8,18 @@ For discussions during and after the hackathon please use the [chat room](https:
 ### Data
 During the hackathon, the data will be available [here](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/README.md). We will move the data to a permanent, public storage location after the hackathon.
 
+Direct download files for compressed archive files
+*  [annotations.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/annotations.zip)
+*  [seismic_data.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/seismic_data.zip)
+*  [timelapse_images.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/timelapse_images.zip)
+*  [timelapse_images_fast.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/timelapse_images_fast.zip)
+*  [timeseries_derived_data_products.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/timeseries_derived_data_products.zip)
+
 ### Code
 The code you will need lives in this repository.
+
+### Further reading, slides, graphics, forms
+*  [docs.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/docs.zip)
 
 ## Quickstart
 
