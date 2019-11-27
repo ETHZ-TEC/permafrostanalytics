@@ -21,12 +21,15 @@ python = "^3.7"  # Compatible python versions must be declared here
 toml = "^0.9"
 
 # Dependencies with extras
-stuett = { git = "https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/stuett"}
+# stuett = { git = "https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/stuett"}
+stuett = { path = "../../framework/stuett/"}
 azure-storage-blob = "2.1.0"
 wget = "^3.2"
 plotly = "^4.3.0"
 flask_caching = "^1.7.2"
 dash-canvas = {git = "https://github.com/niowniow/dash-canvas" }
+tqdm = "^4.39.0"
+tensorboard = "^2.0.2"
 
 # Optional dependencies (extras)
 
