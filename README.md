@@ -9,7 +9,7 @@ For discussions during and after the hackathon please use the [chat room](https:
 During the hackathon, the data will be available [here](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/README.md). We will move the data to a permanent, public storage location after the hackathon.
 
 ### Code
-The code you will need lives in this repository. If you want to dig deeper you can also have a look at the code for our data management package [stuett](https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/stuett).
+The code you will need lives in this repository.
 
 ## Quickstart
 
@@ -36,8 +36,8 @@ On Linux, do the following:
 
 ```
 git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
-cd permafrostanaltics
-poetry install -v
+cd permafrostanalytics
+poetry install -vvv
 ```
 
 ##### Windows installation
@@ -46,10 +46,10 @@ As Windows has issues with the Python packages we require, we require some addit
 
 ```
 git clone https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/permafrostanalytics
-cd permafrostanaltics
+cd permafrostanalytics
 conda install -n permafrost numcodecs -y
 conda install -n permafrost -c conda-forge xarray-extras -y
-poetry install -v
+poetry install -vvv
 ```
 
 ### Try out an example
@@ -78,10 +78,10 @@ cd ideas/youridea_name
 ### Data
 * Using the scripts from this repo, most of the data from [here](https://doi.pangaea.de/10.1594/PANGAEA.897640?format=html#download) can be used plug and play.
 * If you have access to the [arclink service](http://arclink.ethz.ch), you can use it to download seismic streams. There is an explanation in the file [ideas/visualization/plot_spectrogram.py](./ideas/visualization/plot_spectrogram.py).
-* 
+
 
 ### Code
-
+*  If you want to dig deeper you can also have a look at the code for our data management package [stuett](https://gitlab.ethz.ch/tec/public/employees/matthias-meyer/stuett).
 
 ### Tools
 Check out the many open-source tools available online. The ones we use and found most useful are
