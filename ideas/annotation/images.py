@@ -229,6 +229,18 @@ def serve_layout():
                                 id="date_indicator",
                                 style={"width": "50%", "display": "inline-block"},
                             ),
+                            html.Div([
+                                dcc.Input(
+                                    id="userid_input",
+                                    placeholder="Your ID",
+                                    type="number",
+                                    value="",
+                                    persistence=True,
+                                ),
+                            ],
+                            style={"width": "50%", "display": "inline-block"},
+                            ),
+
                         ]
                     ),
                     html.Div(
@@ -254,7 +266,7 @@ def serve_layout():
                         options=[
                             {"label": bb_label_mapping[m], "value": m} for m in bb_label_mapping.keys()
                         ],
-                        value="red",
+                        value="#1f77b4",
                     ),
                     dcc.Dropdown(
                         id="static_label_dropdown",
@@ -270,16 +282,11 @@ def serve_layout():
                 className="six columns",
             ),
             dcc.Markdown(
-                "Annotate by selecting per picture labels or draw bounding boxes with the rectangle tool"
-                "Note: Rotating bounding boxes will result in incorrect labels."
+                """Annotate by selecting per picture labels or draw bounding boxes with the rectangle tool
+                   
+                   Note: Rotating bounding boxes will result in incorrect labels."""
             ),
-            dcc.Input(
-                id="userid_input",
-                placeholder="Your user id",
-                type="number",
-                value="",
-                persistence=True,
-            ),
+            
         ],
         style={"width": "50%"},  # Div
         className="row",
@@ -308,10 +315,10 @@ def update_output(value):
 
 @app.callback(
     Output("my-date-picker-single", "date"),
-    [Input("canvas", "prev_trigger"), Input("canvas", "next_trigger")],
+    [Input("canvas", "prev_trigger"), Input("canvas", "next_trigger"), Input("userid_input","value")],
     [State("index", "data")],
 )
-def reduce_help(prev_trigger, next_trigger, index):
+def reduce_help(prev_trigger, next_trigger, userid_input_value, index):
     """ Triggers on click on the arrow buttons. Changes the date of the date selection tool,
         which triggers the loading of a new image.
     
@@ -337,13 +344,21 @@ def reduce_help(prev_trigger, next_trigger, index):
         index = 0
 
     if button_id == "canvas.prev_trigger":
-        index = index - 1
+        index = index - 2
         if index < 0:
             index = 0
     elif button_id == "canvas.next_trigger":
-        index = index + 1
+        index = index + 2
         if index >= len(data):
             index = len(data) - 1
+    elif button_id == "userid_input.value":
+        if userid_input_value is not None:
+            max_user = 90
+            index = int(len(data)/max_user * (userid_input_value-1))
+            if index < 0:
+                index = 0
+            if index >= len(data):
+                index = len(data) - 1
     else:
         raise PreventUpdate
 
@@ -465,9 +480,9 @@ def to_csv(df, session_id, file_id=None, user_id=None):
         stuett.to_csv_with_store(remote_store, filename, df, dict(index=False))
 
 
-def read_csv(session_id, file_id):
+def read_csv(session_id, file_id, user_id=None):
     global local_store
-    filename = session_id + f"/{file_id}.csv"
+    filename = session_id + "-" + str(user_id) + f"/{file_id}.csv"
     return stuett.read_csv_with_store(local_store, filename)
 
 
@@ -478,9 +493,9 @@ def read_csv(session_id, file_id):
         Output("date_indicator", "children"),
         Output("static_label_dropdown", "value"),
     ],
-    [Input("my-date-picker-single", "date"), Input("session-id", "children")],
+    [Input("my-date-picker-single", "date"), Input("session-id", "children"), Input("userid_input", "value")],
 )
-def update_output(date, session_id):
+def update_output(date, session_id, user_id):
     """ The callback is used to load a new image when the date has changed.
         Date change can be triggered by the date selector box or indirectly by the arrow buttons,
         which change the date selector box.
@@ -529,10 +544,10 @@ def update_output(date, session_id):
         datetime = data.index[index]
         file_id = datetime.strftime("%Y%m%d_%H%M%S")
         try:
-            df = read_csv(session_id, file_id)
-        except:
+            df = read_csv(session_id, file_id, user_id)
+        except Exception as e:
+            print('Could not read annotation file',e)
             df = None
-            pass
 
         # Load the annotations from the server
         try:

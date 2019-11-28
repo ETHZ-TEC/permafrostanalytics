@@ -29,11 +29,12 @@ from azure.storage.blob import (
 import zarr
 
 
-account_name = (
-    get_setting("azure")["account_name"]
-    if setting_exists("azure")
-    else "storageaccountperma8980"
-)
+# Get the account name which is "storageaccountperma8980" for the hackathon
+# If you stored it in a config file you it will beloaded
+if setting_exists("azure"):
+    account_name = get_setting("azure")["account_name"]
+else:
+    account_name = "storageaccountperma8980"
 account_key = get_setting("azure")["account_key"] if setting_exists("azure") else None
 
 if account_key is not None:
@@ -42,22 +43,32 @@ if account_key is not None:
 
 # Create a blob service and list all data available
 block_blob_service = BlockBlobService(
-    account_name="storageaccountperma8980", account_key=account_key
+    account_name=account_name, account_key=account_key
 )
 print("\nList blobs in the container")
 generator = block_blob_service.list_blobs("hackathon-on-permafrost")
-for blob in generator:
+for i, blob in enumerate(generator):
     print("\t Blob name: " + blob.name)
+    if i == 5:
+        break
 
-# Create a zarr store and load the data from the 
+print("List some documents")
+# In stuett we can use a a zarr store and load the data from there 
 store = stuett.ABSStore(
     container="hackathon-on-permafrost",
-    prefix="dataset/",
+    prefix="docs/",
     account_name=account_name,
     account_key=account_key,
     blob_service_kwargs={},
 )
 
+for i, key in enumerate(store.keys()):
+    print(key)
+    if i == 5:
+        break
+
+# # Currently, stuett (or zarr in the backend) only support azure-storage-blob==2.1.0`
+# # But a newer version is available which you can use independently
 # # using azure-storage-blob==12.0.0
 # # untested
 # from azure.storage.blob import BlobServiceClient
