@@ -185,9 +185,9 @@ class SeismicDataset(PytorchDataset):
         #     self.shape = data.shape
         # elif data.shape != self.shape:
         #     warnings.warn(f"Inconsistency in the data for item {indexers['time']}, its shape {data.shape} does not match shape {self.shape}")
-        #     padded_data = torch.zeros(self.shape)
-        #     pad = data.shape - self.shape
-        #     padded_data = torch.nn.functional.pad(data,pad)
+        #     # padded_data = torch.zeros(self.shape)
+        #     # pad = data.shape - self.shape
+        #     # padded_data = torch.nn.functional.pad(data,pad)
 
         return data, target
 

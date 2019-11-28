@@ -66,15 +66,15 @@ parser.add_argument(
     help="The path to the folder containing the permafrost hackathon data",
 )
 parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
-parser.add_argument("-f", "--high_res", action="store_true", help="Use the high resolution images (timelapse_images).")
+parser.add_argument("-hq", "--high_quality", action="store_true", help="Use the high resolution images (timelapse_images).")
 args = parser.parse_args()
 
 data_path = Path(args.path)
 
-if args.high_res:
+if args.high_quality:
     prefix = "timelapse_images"
 else:
-    prefix = "timelapse_images_fast"
+    prefix = "timelapse_images_536"
 
 if not args.local:
     from stuett.global_config import get_setting, setting_exists
@@ -186,7 +186,7 @@ bb_label_mapping = {'#1f77b4':"Mountaineer",  # muted blue
                     }
 bb_label_reverse_mapping = {v: k for k, v in bb_label_mapping.items()}
 img_shape = (4288, 2848, 3)
-if args.high_res:
+if args.high_quality:
     img_downsampling = 2
 else:
     img_downsampling = 1
@@ -261,6 +261,7 @@ def serve_layout():
             ),
             html.Div(
                 [
+                    dcc.Markdown("Class names for bounding boxes:"),
                     dcc.Dropdown(
                         id="bb_label_dropdown",
                         options=[
@@ -268,6 +269,7 @@ def serve_layout():
                         ],
                         value="#1f77b4",
                     ),
+                    dcc.Markdown("Class names for per image Labels:"),
                     dcc.Dropdown(
                         id="static_label_dropdown",
                         options=[
@@ -604,4 +606,4 @@ def update_output(date, session_id, user_id):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
