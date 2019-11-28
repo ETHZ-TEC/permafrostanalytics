@@ -31,6 +31,8 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
 
+from tostools.signal.tfd import tfd_zam
+
 parser = argparse.ArgumentParser(description="Seismic time series and spectogram plot")
 parser.add_argument(
     "-p",
@@ -100,7 +102,7 @@ seismic_data = seismic_node()
 print(seismic_data)
 # Create figure
 
-fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1)
+fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.1)
 fig.update_layout(title_text="Time series and spectrogram")
 
 for i, seed_id in enumerate(seismic_data["seed_id"]):
@@ -130,5 +132,20 @@ trace_hm = go.Heatmap(
     colorbar={"title": "Power Spectrum/dB"},
 )
 fig.add_trace(trace_hm, row=2, col=1)
+
+s = pd.Series(seismic_data.sel(seed_id="4D.MH36.A.EHE", stream_id=0).values, index=pd.to_datetime(seismic_data["time"].values))
+spec2 = np.absolute(tfd_zam(s, 512, stride=64, g_len=6000, h_len=768))
+
+print("spec2 done ")
+
+trace_hm2 = go.Heatmap(
+    x=spec2.index,
+    y=spec2.columns.values,
+    z=np.log(spec2.values.T),
+    colorscale="Jet",
+    hoverinfo="none",
+    colorbar={"title": "Power Spectrum/dB"},
+)
+fig.add_trace(trace_hm2, row=3, col=1)
 
 fig.show()
