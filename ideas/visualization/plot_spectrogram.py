@@ -76,8 +76,8 @@ seismic_node = stuett.data.SeismicSource(
     store=store,
     station="MH36",
     channel=["EHE", "EHN", "EHZ"],
-    start_time="2017-08-01 10:00:00",
-    end_time="2017-08-01 10:01:00",
+    start_time="2017-08-02 10:00:00",
+    end_time="2017-08-02 10:10:00",
 )
 
 ''' If you have access to the [arclink service](arclink.ethz.ch/) you can use it to load your data
@@ -102,7 +102,7 @@ seismic_data = seismic_node()
 print(seismic_data)
 # Create figure
 
-fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.1)
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1)
 fig.update_layout(title_text="Time series and spectrogram")
 
 for i, seed_id in enumerate(seismic_data["seed_id"]):
@@ -117,21 +117,21 @@ for i, seed_id in enumerate(seismic_data["seed_id"]):
         )
 
 
-spectrogram = stuett.data.Spectrogram(nfft=512, stride=64, dim="time")
-spec = spectrogram(seismic_data)
-
-# select only one channel
-spec = spec.sel(seed_id="4D.MH36.A.EHE", stream_id=0)
-
-trace_hm = go.Heatmap(
-    x=pd.to_datetime(spec["time"].values),
-    y=spec["frequency"].values,
-    z=np.log(spec.values),
-    colorscale="Jet",
-    hoverinfo="none",
-    colorbar={"title": "Power Spectrum/dB"},
-)
-fig.add_trace(trace_hm, row=2, col=1)
+# spectrogram = stuett.data.Spectrogram(nfft=512, stride=64, dim="time")
+# spec = spectrogram(seismic_data)
+#
+# # select only one channel
+# spec = spec.sel(seed_id="4D.MH36.A.EHE", stream_id=0)
+#
+# trace_hm = go.Heatmap(
+#     x=pd.to_datetime(spec["time"].values),
+#     y=spec["frequency"].values,
+#     z=np.log(spec.values),
+#     colorscale="Jet",
+#     hoverinfo="none",
+#     colorbar={"title": "Power Spectrum/dB"},
+# )
+# fig.add_trace(trace_hm, row=2, col=1)
 
 s = pd.Series(seismic_data.sel(seed_id="4D.MH36.A.EHE", stream_id=0).values, index=pd.to_datetime(seismic_data["time"].values))
 spec2 = np.absolute(tfd_zam(s, 512, stride=64, g_len=6000, h_len=768))
@@ -146,6 +146,6 @@ trace_hm2 = go.Heatmap(
     hoverinfo="none",
     colorbar={"title": "Power Spectrum/dB"},
 )
-fig.add_trace(trace_hm2, row=3, col=1)
+fig.add_trace(trace_hm2, row=2, col=1)
 
 fig.show()
