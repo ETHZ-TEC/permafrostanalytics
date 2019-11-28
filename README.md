@@ -63,7 +63,23 @@ conda install -n permafrost -c conda-forge xarray-extras -y
 poetry install -vvv
 ```
 
-##### Installation hints
+### Try out an example
+```
+python ideas/visualization/plot_timeseries.py
+```
+
+The script connects to the data repository on Azure. If you want to use the script without an internet connection you can download the files once, and run the script with the local option as shown below.
+
+```
+python utils/download_files.py -f timeseries_derived_data_products.zip
+python ideas/visualization/plot_timeseries.py -l
+```
+
+In case your default browser does not render the page correctly, consider trying another browser. We recommend [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/), which delivers the most stable performance.
+On Windows, you can switch between default programs using `Control Panel → Programs → Default Programs → Set your default programs`.
+
+
+### Installation hints
 
 *Conda:* In case `conda` should throw errors, try updating it to its newest version:
 
@@ -83,21 +99,6 @@ If you prefer to work with Github, we have mirrored the repository [here](https:
 ```
 git clone https://github.com/ETHZ-TEC/permafrostanalytics
 ```
-
-### Try out an example
-```
-python ideas/visualization/plot_timeseries.py
-```
-
-The script connects to the data repository on Azure. If you want to use the script without an internet connection you can download the files once, and run the script with the local option as shown below.
-
-```
-python utils/download_files.py -f timeseries_derived_data_products.zip
-python ideas/visualization/plot_timeseries.py -l
-```
-
-In case your default browser does not render the page correctly, consider trying another browser. We recommend [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/), which delivers the most stable performance.
-On Windows, you can switch between default programs using `Control Panel → Programs → Default Programs → Set your default programs`.
 
 ### Discover
 There are more examples in the [_ideas_](./ideas) folder and some tutorials in the [_tutorial_](./tutorial) folder which we will partially go through during the hackathon.
