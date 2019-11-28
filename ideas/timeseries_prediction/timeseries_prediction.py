@@ -64,8 +64,7 @@ if not args.local:
         container="hackathon-on-permafrost",
         prefix="timeseries_derived_data_products",
         account_name=account_name,
-        account_key=account_key,
-        blob_service_kwargs={},
+        account_key=account_key, 
     )
 else:
     timeseries_folder = Path(data_path).joinpath("timeseries_derived_data_products").resolve()

@@ -60,8 +60,7 @@ if not args.local:
         container="hackathon-on-permafrost",
         prefix="seismic_data/4D/",
         account_name=account_name,
-        account_key=account_key,
-        blob_service_kwargs={},
+        account_key=account_key, 
     )
 else:
     seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
