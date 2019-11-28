@@ -52,6 +52,12 @@ conda install -n permafrost -c conda-forge xarray-extras -y
 poetry install -vvv
 ```
 
+#### Alternative Repository
+If you prefer to work with Github, we have mirrored the repository [here](https://github.com/ETHZ-TEC/permafrostanalytics) and you can clone it
+```
+git clone https://github.com/ETHZ-TEC/permafrostanalytics
+```
+
 ### Try out an example
 ```
 python ideas/visualization/plot_timeseries.py

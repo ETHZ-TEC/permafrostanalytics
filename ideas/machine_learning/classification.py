@@ -86,6 +86,8 @@ parser.add_argument('--use_frozen', action='store_true', default=False,
                     help='Using cached/preprocessed dataset')
 parser.add_argument('--reload_frozen', action='store_true', default=False,
                     help='Reloads the cached/preprocessed dataset')
+parser.add_argument('--reload_all', action='store_true', default=False,
+                    help='Reloads the cached/preprocessed dataset, the labels')
 parser.add_argument('--resume', type=str, default=None,
                     help='Resume from given model checkpoint')
 parser.add_argument('--augment', action='store_true', default=False,help='augment data at runtime')
@@ -109,13 +111,18 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 data_path = Path(args.path)
 label_filename = "automatic_labels_mountaineers.csv"
 tmp_dir = Path(args.tmp_dir)
+os.makedirs(tmp_dir,exist_ok=True)
+
 
 if args.classifier == 'image':
     prefix = "timelapse_images_fast"
 elif args.classifier == 'seismic':
     prefix = "seismic_data/4D/"
 else:
-    raise RunTi
+    raise RuntimeError('Please specify either `image` or `seismic` classifier')
+
+if args.reload_all:
+    args.reload_frozen = True
 
 ############ SETTING UP DATA LOADERS ############
 #################################################
@@ -186,7 +193,8 @@ def get_image_transform():
     return transform
 
 
-
+########## Annotation Balancing #################
+#################################################
 # Load the labels
 label = stuett.data.BoundingBoxAnnotation(filename=label_filename,store=annotation_store)()
 # we are not interest in any x or y position (since there are none in the labels)
@@ -206,7 +214,17 @@ label_mask[no_label_indices] = True
 label = label[label_mask]
 print('Number of labels which are checked against the data',len(label))
 
+# here we load a predefined list from our server
+# If you want to regenerate your list add reload_all as an argument to the script
+label_list_file = tmp_dir.joinpath(f'{args.classifier}_list.csv').resolve()
+if not label_list_file.exists() and not args.reload_all:
+    # load from server
+    with open(label_list_file, "wb") as f:
+        f.write(annotation_store[f'{args.classifier}_list.csv'])
 
+
+###### SELECTING A CLASSIFIER TYPE ##############
+#################################################
 # Load the data source
 def load_seismic_source():
     seismic_channels = ["EHE", "EHN", "EHZ"]
@@ -235,18 +253,22 @@ elif args.classifier == 'seismic':
     data_node, num_channels = load_seismic_source()
 
 
-
+############# LOADING DATASET ###################
+#################################################
 bypass_freeze = not args.use_frozen
 print('Setting up training dataset')
-train_dataset = Dataset(label_list_file=tmp_dir.joinpath(f'{args.classifier}_list.csv').resolve(), transform=transform, store=store, mode="train", label=label, data=data_node, dataset_slice={"time": slice("2017-01-01", "2017-12-31")},batch_dims={"time": stuett.to_timedelta(10, "minutes")})
+train_dataset = Dataset(label_list_file=label_list_file, transform=transform, store=store, mode="train", label=label, data=data_node, dataset_slice={"time": slice("2017-01-01", "2017-12-31")},batch_dims={"time": stuett.to_timedelta(10, "minutes")})
+print('Using cached training data: ',args.use_frozen)
 train_frozen = DatasetFreezer(train_dataset, path=tmp_dir.joinpath('frozen','train'),bypass=bypass_freeze)
 train_frozen.freeze(reload=args.reload_frozen)
 
 print('Setting up test dataset')
-train_dataset = Dataset(label_list_file=tmp_dir.joinpath(f'{args.classifier}_list.csv').resolve(), transform=transform, store=store, mode="test", label=label, data=data_node, dataset_slice={"time": slice("2017-01-01", "2017-12-31")},batch_dims={"time": stuett.to_timedelta(10, "minutes")})
+train_dataset = Dataset(label_list_file=label_list_file, transform=transform, store=store, mode="test", label=label, data=data_node, dataset_slice={"time": slice("2017-01-01", "2017-12-31")},batch_dims={"time": stuett.to_timedelta(10, "minutes")})
+print('Using cached test data: ',args.use_frozen)
 test_frozen = DatasetFreezer(train_dataset, path=tmp_dir.joinpath('frozen','test'),bypass=bypass_freeze)
 test_frozen.freeze(reload=args.reload_frozen)
 
+# Set up pytorch data loaders
 shuffle = True
 train_sampler = None
 train_loader = DataLoader(
@@ -334,7 +356,7 @@ def test(epoch, model, test_loader, writer, embeddings=None):
 
     print('Test set: Average loss: {:.4f}, Accuracy: ({:.0f}%)\n'.format(
         test_loss, 
-        acc_value))
+        acc_value*100))
 
 
 if __name__ == "__main__":   

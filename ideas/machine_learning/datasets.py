@@ -23,6 +23,7 @@ SOFTWARE."""
 import stuett
 from stuett.data import annotations_to_slices
 
+import warnings
 import sys, os
 from os.path import join
 import torch
@@ -53,6 +54,8 @@ class PytorchDataset(stuett.data.SegmentedDataset):
         self.label_list = None
         if isinstance(label_list_file,str) or isinstance(label_list_file,Path):
             self.load_list(label_list_file)
+        elif isinstance(label_list_file,pd.DataFrame):
+            self.label_list = label_list_file
         if self.label_list is None:
             print('Computing labels. This might take long...')
             # if something we couldn't load a file
@@ -60,8 +63,10 @@ class PytorchDataset(stuett.data.SegmentedDataset):
             self.label_list = self.compute_label_list()
             self.store_list(label_list_file)
 
+        # Train and test set must get the same list otherwise it's not guaranteed
+        # that sets are non-overlapping
         np.random.seed(random_seed)
-        indices = np.arange(len(self.label_list))
+        indices = np.arange(len(self.label_list))  
         np.random.shuffle(indices)
         split = np.floor(len(self.label_list)*train_split).astype(np.int)
 
@@ -89,7 +94,7 @@ class PytorchDataset(stuett.data.SegmentedDataset):
                 row_list.append(row_dict_copy)
 
         df = pd.DataFrame(row_list)
-        df.to_csv(path)
+        df.to_csv(path,index=False)
             
     def load_list(self,path):
         try: 
@@ -159,18 +164,30 @@ class SeismicDataset(PytorchDataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         
-        label_info = self.label[idx]
+        label_info = self.label.iloc[idx]
         indexers   = label_info['indexers']
         label   = label_info['labels']
 
         target = np.zeros((len(self.classes),))
         for l in label:
-            target[self.classes[l]] = 1
+            if pd.notnull(l):
+                target[self.classes[l]] = 1
 
+#        print(label_info)
+
+        # print(indexers['time'])
         data = self.get_data(indexers)
         
         if self.transform is not None:
             data = self.transform(data)
+
+        # if "shape" in self.__dict__:
+        #     self.shape = data.shape
+        # elif data.shape != self.shape:
+        #     warnings.warn(f"Inconsistency in the data for item {indexers['time']}, its shape {data.shape} does not match shape {shape}")
+        #     padded_data = torch.zeros(self.shape)
+        #     pad = data.shape - self.shape
+        #     padded_data = torch.nn.functional.pad(data)
 
         return data, target
 
@@ -246,7 +263,7 @@ class DatasetFreezer(Dataset):
 
         pqwriter = None
         for i in tqdm(range(len(self))):
-            value = self[i]
+            value = self[i]               
             df = pd.DataFrame()
             if isinstance(value,tuple):
                 for j,element in enumerate(value):
