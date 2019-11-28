@@ -66,3 +66,5 @@ target/
 
 data/
 cache-directory/
+
+poetry.lock

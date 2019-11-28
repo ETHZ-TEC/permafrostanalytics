@@ -21,6 +21,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
 import stuett
+# What is stuett?
+# A data management package developed for analysing and visualizing outdoor sensor deployments
+# The name originates from the lower german word "stütt" which means "support"
+# The tool revolves around a feedback workflow where analysis is tighly integrated with multi-modal input
 
 import argparse
 from pathlib import Path
@@ -106,13 +110,3 @@ print(one_day_5cm_10cm)
 # Note: The timezone used within stuett is UTC, but the datetime objects you receive are not timezone aware.
 #       Timezone issues are a recurring problem so be careful when working with the data.
 
-# TODO: Seismic (as xarray and obspy)
-# TODO: Images
-# TODO: Rock temperature
-# TODO: Wind
-# TODO: Precipitation
-# TODO: Radiation
-# TODO: Mountaineer Annotations
-# TODO: Annotations
-
-#### Graph ####

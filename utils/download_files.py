@@ -58,6 +58,7 @@ if not args.files:
     files = [
         "timeseries_derived_data_products.zip",
         "timelapse_images.zip",
+        "timelapse_images_fast.zip",
         "seismic_data.zip",
         "docs.zip",
         "annotations.zip",
@@ -77,6 +78,7 @@ for item in files:
     except Exception as e:
         print(e)
 
+print('Extracting files')
 for item in files:
     filename = data_dir / item
     with zipfile.ZipFile(filename, "r") as zip_file:
