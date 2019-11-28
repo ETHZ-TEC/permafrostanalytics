@@ -74,7 +74,7 @@ data_path = Path(args.path)
 if args.high_quality:
     prefix = "timelapse_images"
 else:
-    prefix = "timelapse_images_536"
+    prefix = "timelapse_images_fast"
 
 if not args.local:
     from stuett.global_config import get_setting, setting_exists
