@@ -146,10 +146,11 @@ dataset = seismic_df
 for name, algorithm in anomaly_algorithms:
     y_pred = algorithm.fit_predict(dataset.values)
     for date in dataset[y_pred > 0].index:
+        print("event at {}".format(date))
         start = date - timedelta(hours=1)
         end = date + timedelta(hours=1)
         images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
 
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
-            print(type(img))
+            imshow(img)
