@@ -73,3 +73,7 @@ h1.hometitle{
 .uk-offcanvas-bar{
   background: #0f263cf0;
 }
+
+.navbarlist:hover{
+  background: rgb(255,255,255, 0.1);
+}
