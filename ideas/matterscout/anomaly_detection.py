@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from skimage import io as imio
 import io
+import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import anomaly_visualization
 from dateutil import rrule
@@ -117,43 +118,45 @@ def load_image_source():
         as_pandas=False,
     )
     return image_node, 3
-
+'''
 dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2018, 1, 1)))
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df.set_index("date")
-"""
+'''
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
 rock_temperature = rock_temperature.droplevel('name').drop(["unit"], axis=1)
 rock_temperature = rock_temperature.dropna()
-"""
+
 n_samples = 300
 outliers_fraction = 0.15
 n_outliers = int(outliers_fraction * n_samples)
 n_inliers = n_samples - n_outliers
 
 anomaly_algorithms = [
-    ("Robust covariance", EllipticEnvelope(contamination=outliers_fraction)),
-    ("One-Class SVM", svm.OneClassSVM(nu=outliers_fraction, kernel="rbf",
-                                      gamma=0.1)),
-    ("Isolation Forest", IsolationForest(behaviour='new',
-                                         contamination=outliers_fraction,
-                                         random_state=42)),
+    #("Robust covariance", EllipticEnvelope(contamination=outliers_fraction)),
+    #("One-Class SVM", svm.OneClassSVM(nu=outliers_fraction, kernel="rbf",
+    #                                  gamma=0.1)),
+    #("Isolation Forest", IsolationForest(behaviour='new',
+    #                                     contamination=outliers_fraction,
+    #                                     random_state=42)),
     ("Local Outlier Factor", LocalOutlierFactor(
         n_neighbors=35, contamination=outliers_fraction))]
 
-dataset = seismic_df
+dataset = rock_temperature
+print(dataset.values.shape)
 for name, algorithm in anomaly_algorithms:
     y_pred = algorithm.fit_predict(dataset.values)
+    print(y_pred)
     for date in dataset[y_pred < 0].index:
         print("event at {}".format(date))
         start = date - timedelta(hours=1)
         end = date + timedelta(hours=1)
         images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
-
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
             imshow(img)
+            plt.show()
             time.sleep(0.1)
         time.sleep(3)
