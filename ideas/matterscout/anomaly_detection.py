@@ -127,10 +127,12 @@ def load_image_source():
 
 
 dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2017, 2, 1)))
+print(seismic_data.shape)
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df.set_index("date")
 dataset = seismic_df
+print(dataset)
 """
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
