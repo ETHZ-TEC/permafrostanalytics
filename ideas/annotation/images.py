@@ -246,8 +246,8 @@ def serve_layout():
                     html.Div(
                         [
                             dash_canvas.DashCanvas(
+                                width=1024,
                                 id="canvas",
-                                width=500,
                                 tool="select",
                                 lineWidth=2,
                                 # json_data_in=json_template,
@@ -290,7 +290,7 @@ def serve_layout():
             ),
             
         ],
-        style={"width": "50%"},  # Div
+        style={"width": "100%"},  # Div
         className="row",
     )
 
@@ -534,7 +534,7 @@ def update_output(date, session_id, user_id):
             info_box = "Error loading the image"
             img = np.zeros(img_shape, dtype="uint8")
 
-        img = img[::img_downsampling, ::img_downsampling, :]
+        #img = img[::img_downsampling, ::img_downsampling, :]
         image_content = array_to_data_url(img)
 
         # load data from index
