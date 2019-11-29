@@ -103,7 +103,7 @@ def transform_minute(data):
 def load_seismic_source(start, end):
     output = []
     dates = []
-    for date in pd.date_range(start, end, freq='15M'):
+    for date in pd.date_range(start, end, freq='15min'):
         seismic_node = stuett.data.SeismicSource(
             store=store,
             station="MH36",
