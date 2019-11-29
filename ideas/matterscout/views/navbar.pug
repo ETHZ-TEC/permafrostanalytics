@@ -1,7 +1,7 @@
 extends layout
 
 block nav
-    div(class="uk-navbar-container" uk-navbar)
+    nav(class="uk-navbar-container uk-navbar-transparent" uk-navbar)
         div(class="uk-navbar-left")
             a(href="/")
                 img(src="/images/mountain_logo.png", alt="logo", id="logo")
@@ -15,8 +15,11 @@ block nav
         div(class="uk-offcanvas-bar uk-flex uk-flex-column")
             ul(class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical")
                 li(class="uk-active")
-                    a(href="/") Last events
+                    a(href="/events") Last events
                 li(class="uk-active")
                     a(href="/report") Report event
 
-    block page
+
+    div(class="uk-background-fixed uk-background-center-center uk-height-medium uk-width-large"
+        style="background-image: url(/images/bg.png); height: 100vh; width: 100%; ")
+        block page

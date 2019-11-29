@@ -41,6 +41,15 @@
   padding:40px;
 }
 
+.uk-navbar-container {
+  background: rgb(255, 255, 255, 0.65);
+}
+#reportcard{
+  padding: 40px;
+}
+.uk-card-default {
+  background: #ffffffe0;
+}
 .event-card-title{
   text-align: center;
   font-size: 2rem !important;
@@ -50,4 +59,13 @@
 }
 .center{
   text-align: center;
+}
+
+h1.hometitle{
+  font-size: 2.6rem;
+}
+.hometitle{
+  color: white;
+  text-align: center;
+  padding: 2% 20%;
 }

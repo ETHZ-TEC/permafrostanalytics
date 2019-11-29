@@ -22,6 +22,10 @@ var result_data = {
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+  res.render('home', {data: result_data});
+});
+
+router.get('/events', function(req, res, next) {
   res.render('index', {data: result_data});
 });
 
