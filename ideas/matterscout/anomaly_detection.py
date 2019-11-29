@@ -111,8 +111,8 @@ def calculate_entropy(v):
     return entropy
 
 #extracts statistical features
-def min_max_estractor:
-    return  [np.min(row), np.max(row), np.var(row), np.rms(row), entropy(row),
+def min_max_estractor(row):
+    return  [np.min(row), np.max(row), np.var(row), np.rms(row), calculate_entropy(row),
             np.percentile(row, 1), np.percentile(row, 5), np.percentile(row, 25),
             np.percentile(row, 95), np.percentile(row,95), np.percentile(row, 99)]
 
@@ -121,7 +121,7 @@ def fourier_extractor(x):
     sampling_freq = 250
     N=len(x)
     f_values = np.linspace(0.0, sampling_freq/2, N//2)
-    fft_values_ = fft(y_values)
+    fft_values_ = fft(x)
     fft_values = 2.0/N * np.abs(fft_values_[0:N//2])
 
     coeff_0=fft_values[0] #coefficient at 0Hz
@@ -181,16 +181,16 @@ dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=d
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df.set_index("date")
-
-rock_temperature_node = stuett.data.CsvSource(rock_temperature_file,store=store)
-rock_temperature = rock_temperature_node()
-
-
+"""
+rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
+rock_temperature = rock_temperature_node().to_dataframe()
+rock_temperature = rock_temperature.droplevel('name').drop(["unit"], axis=1)
+rock_temperature = rock_temperature.dropna()
+"""
 n_samples = 300
 outliers_fraction = 0.15
 n_outliers = int(outliers_fraction * n_samples)
 n_inliers = n_samples - n_outliers
-
 
 anomaly_algorithms = [
     ("Robust covariance", EllipticEnvelope(contamination=outliers_fraction)),
@@ -202,13 +202,14 @@ anomaly_algorithms = [
     ("Local Outlier Factor", LocalOutlierFactor(
         n_neighbors=35, contamination=outliers_fraction))]
 
-dataset = rock_temperature
+dataset = seismic_df
 for name, algorithm in anomaly_algorithms:
     y_pred = algorithm.fit_predict(dataset.values)
-    for date in dataset[y_pred].index:
+    for date in dataset[y_pred > 0].index:
         start = date - timedelta(hours=1)
         end = date + timedelta(hours=1)
-        images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)
+        images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
+
         for key in images_df["filename"]:
-            img = imio.imread(io.BytesIO(store[key]))
+            img = imio.imread(io.BytesIO(image_store[key]))
             print(type(img))
