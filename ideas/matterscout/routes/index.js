@@ -26,7 +26,12 @@ router.get('/', function(req, res, next) {
 
 router.get('/event_detail/:id', function(req, res, next) {
   var event_id = req.params.id;
-  res.render('event', result_data[event_id]);
+  res.render('event_detail', result_data[event_id]);
+});
+
+router.get('/event_summary', function(req, res, next) {
+  var event_id = req.params.id;
+  res.send(result_data);
 });
 
 router.get('/report', function(req, res, next) {

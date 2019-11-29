@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/report', indexRouter);
+app.use('/event_detail', indexRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
