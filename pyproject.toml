@@ -29,6 +29,7 @@ flask_caching = "^1.7.2"
 dash-canvas = {git = "https://github.com/niowniow/dash-canvas" }
 tqdm = "^4.39.0"
 tensorboard = "^2.0.2"
+pyignite = "^0.3.4"
 
 # Optional dependencies (extras)
 
