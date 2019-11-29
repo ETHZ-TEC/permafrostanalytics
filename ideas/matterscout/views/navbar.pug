@@ -1,0 +1,20 @@
+extends layout
+
+block nav
+    div(class="uk-navbar-container" uk-navbar)
+        div(class="uk-navbar-left")
+            img(src="images/mountain_logo.png", alt="logo", id="logo")
+        div(class="uk-navbar-center")
+            a(id="ms-logo" href="#" class="uk-navbar-item uk-logo") Matter Scout
+        div(class="uk-navbar-right")
+            a(class="uk-navbar-toggle", uk-toggle="target:  #offcanvas-nav-primary", uk-navbar-toggle-icon, href="#")
+
+    div(id="offcanvas-nav-primary", uk-offcanvas="flip:true")
+        div(class="uk-offcanvas-bar uk-flex uk-flex-column")
+            ul(class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical")
+                li(class="uk-active")
+                    a(href="report.html") Last events
+                li(class="uk-active")
+                    a(href="report.html") Report event
+
+    block page

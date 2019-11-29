@@ -1,7 +1,8 @@
-#logo{
-  height: 2.5rem;
+.uk-navbar-container{
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
-#ms-logo{
-
+#logo{
+  height: 2.5rem;
 }
