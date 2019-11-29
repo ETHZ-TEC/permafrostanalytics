@@ -1,16 +1,19 @@
 extends navbar
 
 block page
-    h1=name
-    h2=description
-    div(uk-slideshow)
-        ul(class="uk-slideshow-items ms-carousel")
-            li
-                img(src="../images/mountain1.jpg" alt="" uk-cover)
-            li
-                img(src="../images/mountain2.jpg" alt="" uk-cover)
-            li
-                img(src="../images/mountain3.jpg" alt="" uk-cover)
+    div(class="uk-container padding-top-card")
+        div(class="uk-card uk-card-default uk-card-body")
+            h1(class="event-card-title",  id=name)=name
+            h3(class="event-card-time center")=time
+            p=description
 
-
-
+            div(class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1" uk-slideshow)
+                ul(class="uk-slideshow-items")
+                    li
+                        img(src="../images/mountain1.jpg" alt="" uk-cover)
+                    li
+                        img(src="../images/mountain2.jpg" alt="" uk-cover)
+                    li
+                        img(src="../images/mountain3.jpg" alt="" uk-cover)
+                a(class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slideshow-item="previous")
+                a(class="uk-position-center-right uk-position-small uk-hidden-hover" href="#" uk-slidenav-next uk-slideshow-item="next")
