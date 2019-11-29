@@ -49,6 +49,8 @@ import io, codecs
 
 from models import SimpleCNN
 
+from dateutil import rrule
+from datetime import datetime, timedelta
 
 
 account_name = (
@@ -61,7 +63,7 @@ account_key = (
 )
 store = stuett.ABSStore(
     container="hackathon-on-permafrost",
-    prefix="timeseries_derived_data_products",
+    prefix="seismic_data/4D/",
     account_name=account_name,
     account_key=account_key,
 )
@@ -84,15 +86,26 @@ def get_seismic_transform():
     return transform
 
 
+def transform_hour(data):
+    pass
+
+def transform_minute(data):
+    pass
+
+
 # Load the data source
-def load_seismic_source():
-    seismic_channels = ["EHE", "EHN", "EHZ"]
-    seismic_node = stuett.data.SeismicSource(
-        store=store,
-        station="MH36",
-        channel=seismic_channels,
-    )
-    return seismic_node, len(seismic_channels)
+def load_seismic_source(start, end):
+    output = []
+    for date in rrule.rrule(rrule.HOURLY, dtstart=start, until=end):
+        seismic_node = stuett.data.SeismicSource(
+            store=store,
+            station="MH36",
+            channel=["EHE", "EHN", "EHZ"],
+            start_time=date,
+            end_time=date + timedelta(hours=1),
+        )
+        output.append(transform_hour(seismic_node()))
+    return output
 
 def load_image_source():
     image_node = stuett.data.MHDSLRFilenames(
