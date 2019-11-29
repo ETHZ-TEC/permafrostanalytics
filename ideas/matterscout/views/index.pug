@@ -2,10 +2,10 @@ extends navbar
 
 block page
     div(class="eventCards")
-        each val in [1, 2, 3, 4, 5]
-            div(class="uk-animation-toggle")
-                div(class="uk-card uk-card-default uk-card-body eventCard uk-animation-slide-left")
-                    h2(class="uk-card-title", id="" + val) Title
-                    a(href="/event_detail/"+val) Vedi evento
-                    p="Lorem ipsum dolor sit amet, consectetur adipiscing elit"
-
+        for val in data
+            a(href="/event_detail/"+val["id"], class="eventCard")
+                div(class="uk-animation-toggle")
+                    div(class="uk-card uk-card-default uk-card-body")
+                        h2(class="uk-card-title", id=val["id"])=val["name"]
+                        p=val["description"]
+                        p(class="timestamp")=val["time"]

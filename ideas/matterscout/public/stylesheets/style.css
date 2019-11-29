@@ -22,7 +22,17 @@
 .eventCards{
   padding: 3% 10%;
 }
+
+.eventCard:hover, .eventCard:visited, .eventCard:link, .eventCard:active
+{
+  text-decoration: none;
+}
+
 .eventCard{
   margin: 5%;
   cursor: pointer;
+}
+
+.timestamp{
+  text-align: right;
 }

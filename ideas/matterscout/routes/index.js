@@ -2,40 +2,42 @@ var express = require('express');
 var router = express.Router();
 
 var result_data = {
-  "1" : {
+  1 : {
     "name": "Bastard avalanche",
     "description":"Oh man, fucking run away",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
-    "time":"29-08-2019"
+    "time":"29-08-2019",
+    "id":1
   },
-  "2" : {
+  2 : {
     "name": "Bastard avalanche",
     "description":"Oh man, fucking run away",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
-    "time":"29-08-2019"
+    "time":"29-08-2019",
+    "id":2
   }
 };
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'MS' });
+  res.render('index', {data: result_data});
 });
 
+router.get('/report', function(req, res, next) {
+  res.render('report');
+});
 
 router.get('/event_detail/:id', function(req, res, next) {
-  var event_id = req.params.id;
+  const event_id = req.params.id;
   res.render('event_detail', result_data[event_id]);
 });
 
 router.get('/event_summary', function(req, res, next) {
-  var event_id = req.params.id;
+  const event_id = req.params.id;
   res.send(result_data);
 });
 
-router.get('/report', function(req, res, next) {
-  res.render('report', { reportScript: '' });
-});
 
 module.exports = router;
