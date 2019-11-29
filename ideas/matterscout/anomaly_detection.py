@@ -147,7 +147,7 @@ seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df = seismic_df.set_index("date")
 dataset = seismic_df.join(rock_temperature).join(prec)
-dataset.dropna()
+dataset = dataset.dropna()
 
 
 print(dataset.describe())
