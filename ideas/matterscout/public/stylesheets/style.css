@@ -44,7 +44,12 @@
 .uk-navbar-container {
   background: rgb(255, 255, 255, 0.65);
 }
-
+#reportcard{
+  padding: 40px;
+}
+.uk-card-default {
+  background: #ffffffe0;
+}
 .event-card-title{
   text-align: center;
   font-size: 2rem !important;

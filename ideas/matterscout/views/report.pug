@@ -6,28 +6,31 @@ block page
             div(class="uk-card uk-card-default uk-card-body uk-animation-scale-up")
                 p(class="uk-text-center") Thank you for your report!
                 p(class="uk-text-center") Our scientists will be notified
+    div(class="uk-container", id="reportcard")
+        div(class="uk-card uk-card-default uk-card-body")
+            div(class="reportText")
+                h1="Report an event"
+                p="Dear user, thank you for your report request."
+                p="Please fill the form below to notify us."
+            form(id="reportform")
+                fieldset(class="uk-fieldset")
+                    legend(class="uk-legend") What happened?
+                    div(class="uk-margin")
+                        input(class="uk-input", type="text", placeholder="Report title")
+                    div(class="uk-margin")
+                        select(class="uk-select")
+                            option Avalanche
+                            option Landslide
+                            option Snow
+                            option Hailstorm
+                            option ..other
 
-    div(class="reportText")
-        h1="Report an event"
-        p="Dear user, thank you for your report request."
-        p="Please fill the form below to notify us."
+                    div(class="uk-margin")
+                        textarea(class="uk-textarea",rows="5",placeholder="Write here what happened...")
 
-    form(id="reportform")
-        fieldset(class="uk-fieldset")
-            legend(class="uk-legend") What happened?
-            div(class="uk-margin")
-                input(class="uk-input", type="text", placeholder="Report title")
-            div(class="uk-margin")
-                select(class="uk-select")
-                    option Option 1
-                    option Option 2
+                    div(class="uk-margin", uk-margin)
+                        div(uk-form-custom="target: true")
+                            input(type="file")
+                            input(class="uk-input uk-form-width-medium",type="text",placeholder="Do you have a picture?", disabled)
 
-            div(class="uk-margin")
-                textarea(class="uk-textarea",rows="5",placeholder="Write here what happened...")
-
-            div(class="uk-margin", uk-margin)
-                div(uk-form-custom="target: true")
-                    input(type="file")
-                    input(class="uk-input uk-form-width-medium",type="text",placeholder="Do you have a picture?", disabled)
-
-                button(class="uk-button uk-button-default", id="submitReport") Submit
+                        button(class="uk-button uk-button-default", id="submitReport") Submit
