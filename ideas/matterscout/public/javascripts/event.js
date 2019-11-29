@@ -12,7 +12,7 @@ Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/finance-
         x: unpack(rows, 'Date'),
         y: unpack(rows, 'AAPL.High'),
         line: {color: '#17BECF'}
-    }
+    };
 
     var trace2 = {
         type: "scatter",
@@ -21,7 +21,7 @@ Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/finance-
         x: unpack(rows, 'Date'),
         y: unpack(rows, 'AAPL.Low'),
         line: {color: '#7F7F7F'}
-    }
+    };
 
     var data = [trace1,trace2];
 
@@ -30,4 +30,4 @@ Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/finance-
     };
 
     Plotly.newPlot('plot_data', data, layout, {showSendToCloud: true});
-})
+});

@@ -2,6 +2,7 @@ extends navbar
 
 block page
 
+
     div(class="uk-container padding-top-card")
         div(class="uk-card uk-card-default uk-card-body")
             h1(class="event-card-title",  id=name)=name
@@ -9,20 +10,18 @@ block page
             h3(style="font-weight:bold") What happened
             p=description
             h3(style="font-weight:bold") Severity
-            div(class="progressBar")
-                div(class="progress")
 
+            div(class="uk-container")
+                div(class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1" uk-slideshow)
+                            ul(class="uk-slideshow-items")
+                                li
+                                    img(src="../images/mountain1.jpg" alt="" uk-cover)
+                                li
+                                    img(src="../images/mountain2.jpg" alt="" uk-cover)
+                                li
+                                    img(src="../images/mountain3.jpg" alt="" uk-cover)
+                            a(class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slideshow-item="previous")
+                            a(class="uk-position-center-right uk-position-small uk-hidden-hover" href="#" uk-slidenav-next uk-slideshow-item="next")
 
-    div(class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1" uk-slideshow)
-                ul(class="uk-slideshow-items")
-                    li
-                        img(src="../images/mountain1.jpg" alt="" uk-cover)
-                    li
-                        img(src="../images/mountain2.jpg" alt="" uk-cover)
-                    li
-                        img(src="../images/mountain3.jpg" alt="" uk-cover)
-                a(class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slideshow-item="previous")
-                a(class="uk-position-center-right uk-position-small uk-hidden-hover" href="#" uk-slidenav-next uk-slideshow-item="next")
-
-    div(id="plot_data" style="width:100%")
-    script(src="../javascripts/event.js")
+        div(id="plot_data" style="width:100%")
+        script(src="../javascripts/event.js")
