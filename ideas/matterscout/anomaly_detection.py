@@ -34,7 +34,8 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import Dataset
-#from ignite.metrics import Accuracy
+from ignite.metrics import Accuracy
+from sklearn import svm
 
 from pathlib import Path
 
@@ -47,13 +48,15 @@ import os
 from skimage import io as imio
 import io, codecs
 
-#from models import SimpleCNN
 
+from models import SimpleCNN
+import anomaly_visualization
 from dateutil import rrule
-from datetime import datetime, timedelta
-
+from datetime import date, timedelta
+from sklearn.covariance import EllipticEnvelope
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
 from scipy.fftpack import fft
-
 
 account_name = (
     get_setting("azure")["account_name"]
@@ -66,6 +69,19 @@ account_key = (
 store = stuett.ABSStore(
     container="hackathon-on-permafrost",
     prefix="seismic_data/4D/",
+    account_name=account_name,
+    account_key=account_key,
+)
+rock_temperature_file = "MH30_temperature_rock_2017.csv"
+derived_store = stuett.ABSStore(
+    container="hackathon-on-permafrost",
+    prefix="timeseries_derived_data_products",
+    account_name=account_name,
+    account_key=account_key,
+)
+image_store = stuett.ABSStore(
+    container="hackathon-on-permafrost",
+    prefix="timelapse_images_fast",
     account_name=account_name,
     account_key=account_key,
 )
@@ -139,6 +155,7 @@ def transform_minute(data):
 # Load the data source
 def load_seismic_source(start, end):
     output = []
+    dates = []
     for date in rrule.rrule(rrule.HOURLY, dtstart=start, until=end):
         seismic_node = stuett.data.SeismicSource(
             store=store,
@@ -147,8 +164,9 @@ def load_seismic_source(start, end):
             start_time=date,
             end_time=date + timedelta(hours=1),
         )
+        dates.append(date)
         output.append(transform_hour(seismic_node()))
-    return output
+    return dates, output
 
 def load_image_source():
     image_node = stuett.data.MHDSLRFilenames(
@@ -159,7 +177,38 @@ def load_image_source():
     return image_node, 3
 
 transform = get_seismic_transform()
-data_node, num_channels = load_seismic_source()
-data = data_node()
-print(type(data))
-print(data)
+dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2018, 1, 1)))
+seismic_df = pd.DataFrame(seismic_data)
+seismic_df["date"] = dates
+seismic_df.set_index("date")
+
+rock_temperature_node = stuett.data.CsvSource(rock_temperature_file,store=store)
+rock_temperature = rock_temperature_node()
+
+
+n_samples = 300
+outliers_fraction = 0.15
+n_outliers = int(outliers_fraction * n_samples)
+n_inliers = n_samples - n_outliers
+
+
+anomaly_algorithms = [
+    ("Robust covariance", EllipticEnvelope(contamination=outliers_fraction)),
+    ("One-Class SVM", svm.OneClassSVM(nu=outliers_fraction, kernel="rbf",
+                                      gamma=0.1)),
+    ("Isolation Forest", IsolationForest(behaviour='new',
+                                         contamination=outliers_fraction,
+                                         random_state=42)),
+    ("Local Outlier Factor", LocalOutlierFactor(
+        n_neighbors=35, contamination=outliers_fraction))]
+
+dataset = rock_temperature
+for name, algorithm in anomaly_algorithms:
+    y_pred = algorithm.fit_predict(dataset.values)
+    for date in dataset[y_pred].index:
+        start = date - timedelta(hours=1)
+        end = date + timedelta(hours=1)
+        images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)
+        for key in images_df["filename"]:
+            img = imio.imread(io.BytesIO(store[key]))
+            print(type(img))
