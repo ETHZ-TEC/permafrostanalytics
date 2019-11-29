@@ -21,8 +21,8 @@ Direct download files for compressed archive files:
 The code you will need for the hackathon lives in this repository.
 
 ### Further reading, slides, graphics, forms
-*  [docs.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/docs.zip)
-
+* [docs.zip](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/docs.zip)
+* [Azure Intro](https://storageaccountperma8980.blob.core.windows.net/hackathon-on-permafrost/docs/DSVM%20Setup.pdf)
 ## Quickstart
 
 To use the framework, you require the following tools as prerequisites:
