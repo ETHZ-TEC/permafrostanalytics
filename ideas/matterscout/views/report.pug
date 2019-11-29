@@ -1,0 +1,27 @@
+extends navbar
+
+block page
+    div(class="reportText")
+        h1="Report an event"
+        p="Dear user, thank you for your report request."
+        p="Please fill the form below to notify us."
+
+    form(id="reportform", action="/report/submitReport", method="post")
+        fieldset(class="uk-fieldset")
+            legend(class="uk-legend") What happened?
+            div(class="uk-margin")
+                input(class="uk-input", type="text", placeholder="Report title")
+            div(class="uk-margin")
+                select(class="uk-select")
+                    option Option1
+                    option Option 02
+
+            div(class="uk-margin")
+                textarea(class="uk-textarea",rows="5",placeholder="Write here what happened...")
+
+            div(class="uk-margin", uk-margin)
+                div(uk-form-custom="target: true")
+                    input(type="file")
+                    input(class="uk-input uk-form-width-medium",type="text",placeholder="Do you have a picture?", disabled)
+
+                button(class="uk-button uk-button-default") Submit
