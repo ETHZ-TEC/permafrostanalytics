@@ -19,6 +19,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/events', indexRouter)
 app.use('/report', indexRouter);
 app.use('/event_detail', indexRouter);
 
