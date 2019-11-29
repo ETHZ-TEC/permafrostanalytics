@@ -32,6 +32,7 @@ store = stuett.ABSStore(
     account_key=account_key,
 )
 rock_temperature_file = "MH30_temperature_rock_2017.csv"
+prec_file = "MH25_vaisalawxt520prec_2017.csv"
 derived_store = stuett.ABSStore(
     container="hackathon-on-permafrost",
     prefix="timeseries_derived_data_products",
@@ -128,23 +129,29 @@ def load_image_source():
     return image_node, 3
 
 
-dates, seismic_data = load_seismic_source(start=date(2017, 1, 1), end=date(2017, 2, 1))
-seismic_data = np.array(seismic_data)
-seismic_df = pd.DataFrame(seismic_data)
-seismic_df["date"] = dates
-seismic_df.set_index("date")
-dataset = seismic_df
-"""
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
 
 rock_temperature = rock_temperature.reset_index('name').drop(["unit"], axis=1)
 
 rock_temperature = rock_temperature.pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+rock_temperature.index.rename("date")
 
-print(rock_temperature.describe())
-dataset = rock_temperature
-"""
+prec_node = stuett.data.CsvSource(prec_file, store=derived_store)
+prec = prec_node().to_dataframe()
+prec = prec.reset_index('name').drop(["unit"], axis=1).pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+
+dates, seismic_data = load_seismic_source(start=date(2017, 1, 1), end=date(2017, 1, 2))
+seismic_data = np.array(seismic_data)
+seismic_df = pd.DataFrame(seismic_data)
+seismic_df["date"] = dates
+seismic_df = seismic_df.set_index("date")
+dataset = seismic_df.join(rock_temperature).join(prec)
+dataset.dropna()
+
+
+print(dataset.describe())
+
 n_samples = 300
 outliers_fraction = 0.05
 n_outliers = int(outliers_fraction * n_samples)
