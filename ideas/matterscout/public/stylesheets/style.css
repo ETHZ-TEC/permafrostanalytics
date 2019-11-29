@@ -55,3 +55,12 @@
 .center{
   text-align: center;
 }
+
+h1.hometitle{
+  font-size: 2.6rem;
+}
+.hometitle{
+  color: white;
+  text-align: center;
+  padding: 2% 20%;
+}
