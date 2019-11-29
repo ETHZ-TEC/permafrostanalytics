@@ -45,50 +45,54 @@ image_store = stuett.ABSStore(
 )
 
 
-#calculates entropy on the measurements
+# calculates entropy on the measurements
 def calculate_entropy(v):
     counter_values = Counter(v).most_common()
     probabilities = [elem[1] / len(v) for elem in counter_values]
     entropy = scipy.stats.entropy(probabilities)
     return entropy
 
-#extracts statistical features
-def min_max_estractor(row):
-    return  [np.min(row), np.max(row), np.var(row), np.rms(row), calculate_entropy(row),
-            np.percentile(row, 1), np.percentile(row, 5), np.percentile(row, 25),
-            np.percentile(row, 95), np.percentile(row,95), np.percentile(row, 99)]
 
-#computes fourier transform of the signal and extracts features
+# extracts statistical features
+def min_max_estractor(row):
+    return [np.min(row), np.max(row), np.var(row), np.rms(row), calculate_entropy(row),
+            np.percentile(row, 1), np.percentile(row, 5), np.percentile(row, 25),
+            np.percentile(row, 95), np.percentile(row, 95), np.percentile(row, 99)]
+
+
+# computes fourier transform of the signal and extracts features
 def fourier_extractor(x):
     sampling_freq = 250
-    N=len(x)
-    f_values = np.linspace(0.0, sampling_freq/2, N//2)
+    N = len(x)
+    f_values = np.linspace(0.0, sampling_freq / 2, N // 2)
     fft_values_ = fft(x)
-    fft_values = 2.0/N * np.abs(fft_values_[0:N//2])
+    fft_values = 2.0 / N * np.abs(fft_values_[0:N // 2])
 
-    coeff_0=fft_values[0] #coefficient at 0Hz
-    peak_70=0 #coefficient around 70 Hz
-    coeff = np.zeros(20) #max coefficient from each 2 Hz interval (0-40)
-    integral40 = 0 #integral from 0 to 40 Hz
-    integral125 = np.avg(fft_values) #integral over the whole transform
+    coeff_0 = fft_values[0]  # coefficient at 0Hz
+    peak_70 = 0  # coefficient around 70 Hz
+    coeff = np.zeros(20)  # max coefficient from each 2 Hz interval (0-40)
+    integral40 = 0  # integral from 0 to 40 Hz
+    integral125 = np.avg(fft_values)  # integral over the whole transform
     for i in range(0, len(f_values)):
-        if f_values[i]>69 and f_values[i]<72 and fft_values[i]>peak_70:
-            peak_70=fft_values[i]
-        if f_values[i]<40:
-            integral40+=fft_values[i]
-            if fft_values[i] > coeff[int(i/2)]:
-                coeff[int(i/2)]=fft_values[i]
+        if f_values[i] > 69 and f_values[i] < 72 and fft_values[i] > peak_70:
+            peak_70 = fft_values[i]
+        if f_values[i] < 40:
+            integral40 += fft_values[i]
+            if fft_values[i] > coeff[int(i / 2)]:
+                coeff[int(i / 2)] = fft_values[i]
     return coeff + [coeff_0, peak_70, integral40, integral125]
 
-#extracts features from an hour worth of seismic data from three sensors
+
+# extracts features from an hour worth of seismic data from three sensors
 def transform_hour(data):
     data = np.array(data)
-    features=[]
+    features = []
     for row in data:
         for extractor in [min_max_estractor, fourier_extractor]:
             for element in extractor(row):
                 features.append(element)
     return features
+
 
 def transform_minute(data):
     pass
@@ -110,6 +114,7 @@ def load_seismic_source(start, end):
         output.append(transform_hour(seismic_node()))
     return dates, output
 
+
 def load_image_source():
     image_node = stuett.data.MHDSLRFilenames(
         store=store,
@@ -118,6 +123,8 @@ def load_image_source():
     )
     return image_node, 3
 
+
+"""
 dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2018, 1, 1)))
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
@@ -125,14 +132,18 @@ seismic_df.set_index("date")
 """
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
-rock_temperature = rock_temperature.droplevel('name').drop(["unit"], axis=1)
-rock_temperature = rock_temperature.dropna()
-"""
+
+rock_temperature = rock_temperature.reset_index('name').drop(["unit"], axis=1)
+
+rock_temperature = rock_temperature.pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+
+print(rock_temperature.describe())
+
 n_samples = 300
-outliers_fraction = 0.15
+outliers_fraction = 0.05
 n_outliers = int(outliers_fraction * n_samples)
 n_inliers = n_samples - n_outliers
-
+"""
 anomaly_algorithms = [
     ("Robust covariance", EllipticEnvelope(contamination=outliers_fraction)),
     ("One-Class SVM", svm.OneClassSVM(nu=outliers_fraction, kernel="rbf",
@@ -142,18 +153,24 @@ anomaly_algorithms = [
                                          random_state=42)),
     ("Local Outlier Factor", LocalOutlierFactor(
         n_neighbors=35, contamination=outliers_fraction))]
-
-dataset = seismic_df
+"""
+anomaly_algorithms = [
+    ("Local Outlier Factor", LocalOutlierFactor(
+        n_neighbors=35, contamination=outliers_fraction))]
+dataset = rock_temperature
 for name, algorithm in anomaly_algorithms:
+
     y_pred = algorithm.fit_predict(dataset.values)
+    print(dataset[y_pred < 0].count())
+    print(dataset.count())
     for date in dataset[y_pred < 0].index:
         print("event at {}".format(date))
-        start = date - timedelta(hours=1)
-        end = date + timedelta(hours=1)
-        images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
+        start = str(date - timedelta(hours=1))
+        end = str(date + timedelta(hours=1))
 
+        images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
             imshow(img)
             time.sleep(0.1)
-        time.sleep(3)
+        # time.sleep(3)
