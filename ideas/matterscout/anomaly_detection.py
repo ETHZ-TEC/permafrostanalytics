@@ -128,8 +128,8 @@ def load_image_source():
     return image_node, 3
 
 
-
-dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2017, 2, 1)))
+dates, seismic_data = load_seismic_source(start=date(2017, 1, 1), end=date(2017, 2, 1))
+seismic_data = np.array(seismic_data)
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df.set_index("date")
