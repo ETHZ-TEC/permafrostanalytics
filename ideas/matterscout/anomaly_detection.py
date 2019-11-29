@@ -14,6 +14,7 @@ from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from scipy.fftpack import fft
+import time
 
 account_name = (
     get_setting("azure")["account_name"]
@@ -154,3 +155,5 @@ for name, algorithm in anomaly_algorithms:
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
             imshow(img)
+            time.sleep(1)
+        time.sleep(3)
