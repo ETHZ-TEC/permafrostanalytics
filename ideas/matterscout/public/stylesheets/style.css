@@ -69,3 +69,7 @@ h1.hometitle{
   text-align: center;
   padding: 2% 20%;
 }
+
+.uk-offcanvas-bar{
+  background: #0f263cf0;
+}
