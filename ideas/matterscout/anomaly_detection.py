@@ -8,7 +8,6 @@ import os
 import pandas as pd
 import xarray as xr
 
-#from datasets import SeismicDataset, DatasetFreezer, DatasetMerger
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from torch import Tensor
@@ -34,7 +33,6 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import Dataset
-from ignite.metrics import Accuracy
 from sklearn import svm
 
 from pathlib import Path
@@ -49,7 +47,6 @@ from skimage import io as imio
 import io, codecs
 
 
-from models import SimpleCNN
 import anomaly_visualization
 from dateutil import rrule
 from datetime import date, timedelta
