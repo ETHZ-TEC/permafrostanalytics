@@ -1,52 +1,12 @@
-import stuett
-import torch
-import numpy as np
 import scipy
-import argparse
-import datetime as dt
-import os
-import pandas as pd
-import xarray as xr
-
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from torch import Tensor
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from tqdm import tqdm
-from torch.utils.tensorboard import SummaryWriter
-
-
-from plotly import tools
-from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
-import plotly.graph_objs as go
-
 import stuett
 from stuett.global_config import get_setting, setting_exists, set_setting
-
-import argparse
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torchvision import datasets, transforms
-from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import Dataset
 from sklearn import svm
-
-from pathlib import Path
-
-from PIL import Image
-
 import numpy as np
-import json
 import pandas as pd
-import os
 from skimage import io as imio
-import io, codecs
-
-
+import io
+from matplotlib.pyplot import imshow
 import anomaly_visualization
 from dateutil import rrule
 from datetime import date, timedelta
@@ -54,6 +14,7 @@ from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from scipy.fftpack import fft
+import time
 
 account_name = (
     get_setting("azure")["account_name"]
@@ -83,22 +44,6 @@ image_store = stuett.ABSStore(
     account_key=account_key,
 )
 
-def get_seismic_transform():
-    def to_db(x,min_value=1e-10,reference=1.0):
-        value_db = 10.0 * xr.ufuncs.log10(xr.ufuncs.maximum(min_value, x))
-        value_db -= 10.0 * xr.ufuncs.log10(xr.ufuncs.maximum(min_value, reference))
-        return value_db
-
-    spectrogram = stuett.data.Spectrogram(nfft=512, stride=512, dim="time", sampling_rate=1000)
-
-    transform = transforms.Compose([
-        lambda x: x / x.max(),                          # rescale to -1 to 1
-        spectrogram,                                    # spectrogram
-        lambda x: to_db(x).values.squeeze(),
-        lambda x: Tensor(x)
-        ])
-
-    return transform
 
 #calculates entropy on the measurements
 def calculate_entropy(v):
@@ -173,7 +118,6 @@ def load_image_source():
     )
     return image_node, 3
 
-transform = get_seismic_transform()
 dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2018, 1, 1)))
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
@@ -202,11 +146,14 @@ anomaly_algorithms = [
 dataset = seismic_df
 for name, algorithm in anomaly_algorithms:
     y_pred = algorithm.fit_predict(dataset.values)
-    for date in dataset[y_pred > 0].index:
+    for date in dataset[y_pred < 0].index:
+        print("event at {}".format(date))
         start = date - timedelta(hours=1)
         end = date + timedelta(hours=1)
         images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
 
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
-            print(type(img))
+            imshow(img)
+            time.sleep(0.1)
+        time.sleep(3)
