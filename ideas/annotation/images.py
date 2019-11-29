@@ -66,7 +66,7 @@ parser.add_argument(
     help="The path to the folder containing the permafrost hackathon data",
 )
 parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
-parser.add_argument("-hq", "--high_quality", action="store_true", help="Use the high resolution images (timelapse_images).")
+parser.add_argument("-hq", "--high_quality", action="store_true", help="Use the high resolution images (timelapse_images)")
 args = parser.parse_args()
 
 data_path = Path(args.path)
@@ -187,7 +187,7 @@ bb_label_mapping = {'#1f77b4':"Mountaineer",  # muted blue
 bb_label_reverse_mapping = {v: k for k, v in bb_label_mapping.items()}
 img_shape = (4288, 2848, 3)
 if args.high_quality:
-    img_downsampling = 2
+    img_downsampling = 4
 else:
     img_downsampling = 1
 
@@ -404,7 +404,8 @@ def parse_labels(string, bb_label_mapping, static_label):
                 label = bb_label_mapping[obj["stroke"]]
                 label = reverse_static_label_mapping[label]
             except:
-                raise RuntimeError(f'Could not find bb_label_mapping for {obj["stroke"]}')
+                raise warning.warn(f'Could not find bb_label_mapping for {obj["stroke"]}')
+                continue
             item = [obj["right"], obj["bottom"], obj["left"], obj["top"]]
 
             item = np.array(item)
