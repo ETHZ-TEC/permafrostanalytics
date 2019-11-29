@@ -109,7 +109,7 @@ def load_seismic_source(start, end):
             station="MH36",
             channel=["EHE", "EHN", "EHZ"],
             start_time=date,
-            end_time=date + timedelta(hours=1),
+            end_time=date + timedelta(minutes=15),
         )
         dates.append(date)
         output.append(transform_hour(seismic_node()))
