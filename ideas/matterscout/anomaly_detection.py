@@ -109,7 +109,7 @@ def calculate_entropy(v):
 
 #extracts statistical features
 def min_max_estractor(row):
-    return  [np.min(row), np.max(row), np.var(row), np.rms(row), calculate_entropy(row),
+    return  [np.min(row), np.max(row), np.var(row), np.mean((row-np.mean(row))**2), np.mean(row**2),#calculate_entropy(row),
             np.percentile(row, 1), np.percentile(row, 5), np.percentile(row, 25),
             np.percentile(row, 95), np.percentile(row,95), np.percentile(row, 99)]
 
@@ -139,10 +139,10 @@ def fourier_extractor(x):
 def transform_hour(data):
     data = np.array(data)
     features=[]
-    for row in data:
-        for extractor in [min_max_estractor, fourier_extractor]:
-            for element in extractor(row):
-                features.append(element)
+    print('Extracting features')
+    for extractor in [min_max_estractor]:#, fourier_extractor]:
+        for element in extractor(data):
+            features.append(element)
     return features
 
 def transform_minute(data):
