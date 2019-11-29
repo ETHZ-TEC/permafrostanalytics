@@ -123,12 +123,15 @@ def load_image_source():
         as_pandas=False,
     )
     return image_node, 3
-'''
-dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2018, 1, 1)))
+
+
+
+dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2017, 2, 1)))
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df.set_index("date")
-'''
+dataset = seismic_df
+"""
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
 
@@ -137,7 +140,8 @@ rock_temperature = rock_temperature.reset_index('name').drop(["unit"], axis=1)
 rock_temperature = rock_temperature.pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
 
 print(rock_temperature.describe())
-
+dataset = rock_temperature
+"""
 n_samples = 300
 outliers_fraction = 0.05
 n_outliers = int(outliers_fraction * n_samples)
@@ -156,7 +160,7 @@ anomaly_algorithms = [
 anomaly_algorithms = [
     ("Local Outlier Factor", LocalOutlierFactor(
         n_neighbors=35, contamination=outliers_fraction))]
-dataset = rock_temperature
+
 for name, algorithm in anomaly_algorithms:
 
     y_pred = algorithm.fit_predict(dataset.values)
@@ -164,6 +168,7 @@ for name, algorithm in anomaly_algorithms:
     print(dataset.count())
     for date in dataset[y_pred < 0].index:
         print("event at {}".format(date))
+        print(dataset.loc[date])
         start = str(date - timedelta(hours=1))
         end = str(date + timedelta(hours=1))
 
