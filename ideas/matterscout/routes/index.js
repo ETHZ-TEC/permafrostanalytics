@@ -30,6 +30,7 @@ router.get('/event_detail/:id', function(req, res, next) {
 });
 
 router.get('/report', function(req, res, next) {
-  res.render('report', { title: 'MS' });
+  res.render('report', { reportScript: '' });
 });
+
 module.exports = router;
