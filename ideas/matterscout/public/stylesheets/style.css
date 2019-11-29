@@ -18,3 +18,11 @@
 .greetings {
   padding: 20%;
 }
+
+.eventCards{
+  padding: 3% 10%;
+}
+.eventCard{
+  margin: 5%;
+  cursor: pointer;
+}

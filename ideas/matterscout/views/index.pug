@@ -1,4 +1,10 @@
 extends navbar
 
 block page
-    h1=title
+    div(class="eventCards")
+        each val in [1, 2, 3, 4, 5]
+            div(class="uk-animation-toggle")
+                div(class="uk-card uk-card-default uk-card-body eventCard uk-animation-slide-left")
+                    h2(class="uk-card-title", id="" + val) Title
+                    p="Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+
