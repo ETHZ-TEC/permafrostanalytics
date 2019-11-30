@@ -172,7 +172,7 @@ prec_node = stuett.data.CsvSource(prec_file, store=derived_store)
 prec = prec_node().to_dataframe()
 prec = prec.reset_index('name').drop(["unit"], axis=1).pivot(columns='name', values='CSV').drop(["position"], axis=1)
 
-dates, seismic_data = load_seismic_source(start=date(2017, 1, 2), end=date(2017, 1, 5))
+dates, seismic_data = load_seismic_source(start=date(2017, 2, 2), end=date(2017, 2, 3))
 seismic_data = np.array(seismic_data)
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
@@ -209,11 +209,11 @@ for name, algorithm in anomaly_algorithms:
     y_pred = algorithm.fit_predict(dataset.values)
 
     os.makedirs("data/normal/", exist_ok=True)
-    normals = dataset[y_pred > 0].sample(n=100)
-    prec.loc[normals.index].median(axis=1).to_csv("data/normal/precipitation_data.csv")
+    normals = dataset[y_pred > 0]
+    prec.loc[normals.index].median(axis=0).to_csv("data/normal/precipitation_data.csv")
     normal_seismic = []
     for normal_data in normals.index:
-        normal_seismic.append(get_seismic_data(date)[0])
+        normal_seismic.append(get_seismic_data(normal_data)[0])
     normal_seismic = np.median(np.array(normal_seismic), axis=0)
     pd.DataFrame(normal_seismic).to_csv("data/normal/seismic_data.csv")
 
