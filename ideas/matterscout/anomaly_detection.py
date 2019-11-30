@@ -73,25 +73,30 @@ def fourier_extractor(x):
     peak_70 = 0  # coefficient around 70 Hz
     coeff = np.zeros(20)  # max coefficient from each 2 Hz interval (0-40)
     integral40 = 0  # integral from 0 to 40 Hz
-    integral125 = np.avg(fft_values)  # integral over the whole transform
+    integral125 = np.mean(fft_values)  # integral over the whole transform
     for i in range(0, len(f_values)):
         if f_values[i] > 69 and f_values[i] < 72 and fft_values[i] > peak_70:
             peak_70 = fft_values[i]
         if f_values[i] < 40:
             integral40 += fft_values[i]
-            if fft_values[i] > coeff[int(i / 2)]:
-                coeff[int(i / 2)] = fft_values[i]
-    return coeff + [coeff_0, peak_70, integral40, integral125]
+            if fft_values[i] > coeff[int(f_values[i]/2)]:
+                coeff[int(f_values[i]/2)] = fft_values[i]
+    return list(coeff ) + [coeff_0, peak_70, integral40, integral125]
 
 
 # extracts features from an hour worth of seismic data from three sensors
 def transform_hour(data):
     data = np.array(data)
+    print(data)
+    print(data.shape)
     features=[]
-    print('Extracting features')
-    for extractor in [min_max_estractor]:#, fourier_extractor]:
-        for element in extractor(data):
-            features.append(element)
+    for first_dimension in data:
+        for row in first_dimension:
+            print(row.shape)
+            for extractor in [min_max_estractor]:#, fourier_extractor]:
+                for element in extractor(row):
+                    features.append(element)
+    features = np.array(features)
     return features
 
 
@@ -103,7 +108,7 @@ def transform_minute(data):
 def load_seismic_source(start, end):
     output = []
     dates = []
-    for date in pd.date_range(start, end, freq='15min'):
+    for i, date in enumerate(pd.date_range(start, end, freq='15min')):
         seismic_node = stuett.data.SeismicSource(
             store=store,
             station="MH36",
@@ -113,6 +118,7 @@ def load_seismic_source(start, end):
         )
         dates.append(date)
         output.append(transform_hour(seismic_node()))
+        print(i)
     return dates, output
 
 
@@ -126,13 +132,14 @@ def load_image_source():
 
 
 
-dates, seismic_data = np.array(load_seismic_source(start=date(2017, 1, 1), end=date(2017, 2, 1)))
-print(seismic_data.shape)
+dates, seismic_data = load_seismic_source(start=date(2017, 7, 29), end=date(2017, 7, 31))
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
-seismic_df.set_index("date")
+seismic_df = seismic_df.set_index("date")
 dataset = seismic_df
 print(dataset)
+pd.DataFrame(dataset).to_csv('manual_extraction.csv')
+
 """
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
@@ -159,9 +166,7 @@ anomaly_algorithms = [
     ("Local Outlier Factor", LocalOutlierFactor(
         n_neighbors=35, contamination=outliers_fraction))]
 """
-anomaly_algorithms = [
-    ("Local Outlier Factor", LocalOutlierFactor(
-        n_neighbors=35, contamination=outliers_fraction))]
+anomaly_algorithms = [("One-Class SVM", svm.OneClassSVM(nu=outliers_fraction, kernel="rbf", gamma=0.1))]
 
 for name, algorithm in anomaly_algorithms:
 
@@ -171,13 +176,15 @@ for name, algorithm in anomaly_algorithms:
     for date in dataset[y_pred < 0].index:
         print("event at {}".format(date))
         print(dataset.loc[date])
-        start = str(date - timedelta(hours=1))
-        end = str(date + timedelta(hours=1))
+        print(dataset.describe())
+        start = str(date - timedelta(minutes=1))
+        end = str(date + timedelta(minutes=10))
 
         images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
             imshow(img)
             plt.show()
-            time.sleep(0.1)
+            break
+            #time.sleep(0.1)
         # time.sleep(3)
