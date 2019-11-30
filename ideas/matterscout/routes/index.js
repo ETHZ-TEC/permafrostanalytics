@@ -3,7 +3,7 @@ var router = express.Router();
 
 var result_data = {
   1 : {
-    "name": "Bastard avalanche",
+    "name": "",
     "description":"An avalanche fell down the mountain and killed everyone. A lot of snow has been detected, many mountaineers has been severely injured. Below you can see the pictures of the fact.",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
@@ -12,7 +12,7 @@ var result_data = {
     "severity":5
   },
   2 : {
-    "name": "Bastard avalanche",
+    "name": "",
     "description":"Oh man, fucking run away",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
