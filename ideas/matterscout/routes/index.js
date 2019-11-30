@@ -43,5 +43,11 @@ router.get('/event_summary', function(req, res, next) {
   res.send(result_data);
 });
 
+router.post('/report', function(req, res, next) {
+  var json = JSON.stringify(req.body)
+  var fs = require('fs');
+  fs.writeFile("json/" + req.body.title + ".json", json, 'utf8', () => {console.log("file received")});
+  res.render('greetings');
+});
 
 module.exports = router;
