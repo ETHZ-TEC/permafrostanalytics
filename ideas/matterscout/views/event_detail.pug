@@ -10,9 +10,9 @@ block page
             h3(style="font-weight:bold") What happened
             p=description
             h3(style="font-weight:bold; width:8rem; display:inline-block;") Severity
-            if severity<10
+            if severity<2
                 span(class="uk-label uk-label-success severity-label")="Usual"
-            else if severity>=10 && severity<=20
+            else
                 span(class="uk-label uk-label-warning severity-label")="Unusual"
 
 

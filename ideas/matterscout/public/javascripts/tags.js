@@ -8,7 +8,7 @@ $(document).ready(function () {
         let inserted_tag = $('#tag-form').val();
         let tags = $('#labels').html();
 
-        new_tag = '<span id="tag-'+counter+'" class="uk-label tag-layout">'+inserted_tag+'</span>';
+        new_tag = '<span id="tag-'+counter+'" class="uk-label tag-layout"><span uk-icon="close" style="margin-right: 5px"></span>'+inserted_tag+'</span>';
         array_tags.push(counter);
         counter+=1;
         $('#labels').html(tags+new_tag);

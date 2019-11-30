@@ -3,8 +3,8 @@ var router = express.Router();
 
 var result_data = {
   1 : {
-    "name": "",
-    "description":"An avalanche fell down the mountain and killed everyone. A lot of snow has been detected, many mountaineers has been severely injured. Below you can see the pictures of the fact.",
+    "name": "Heavy rain",
+    "description":"We recorded an intense amount of rain, unusual for the period. Below you can see the details of the amount of rain recorded by our sensors.",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
     "time":"29-08-2019",
@@ -18,7 +18,7 @@ var result_data = {
     "sensors": "1.csv",
     "time":"29-08-2019",
     "id":2,
-    "severity":11
+    "severity":1
   }
 };
 
