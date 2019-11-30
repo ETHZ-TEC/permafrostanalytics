@@ -17,6 +17,7 @@ from sklearn.neighbors import LocalOutlierFactor
 from scipy.fftpack import fft
 from sklearn.impute import SimpleImputer
 import time
+import os
 
 account_name = (
     get_setting("azure")["account_name"]
@@ -106,6 +107,15 @@ def transform_minute(data):
     pass
 
 
+def get_seismic_data(date):
+    return np.array(stuett.data.SeismicSource(
+        store=store,
+        station="MH36",
+        channel=["EHE", "EHN", "EHZ"],
+        start_time=date,
+        end_time=date + timedelta(hours=1),
+    )())
+
 # Load the data source
 def load_seismic_source(start, end):
     output = []
@@ -134,6 +144,10 @@ def load_image_source():
         as_pandas=False,
     )
     return image_node, 3
+
+
+os.remove("data/*")
+os.removedirs("data/*")
 
 
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
@@ -184,8 +198,14 @@ for name, algorithm in anomaly_algorithms:
     print(dataset[y_pred < 0].count())
     print(dataset.count())
     for date in dataset[y_pred < 0].index:
+
+        os.makedirs("data/{}/images/".format(date), exist_ok=True)
+
         print("event at {}".format(date))
         print(dataset.loc[date])
+        prec.loc[date].to_csv("data/{}/precipitation_data.csv".format(date))
+        np.savetxt("data/{}/seismic_data.csv".format(date), get_seismic_data(date), delimiter=",")
+
         print(dataset.describe())
         start = str(date - timedelta(minutes=10))
         end = str(date + timedelta(minutes=60))
@@ -194,6 +214,7 @@ for name, algorithm in anomaly_algorithms:
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
             imshow(img)
+            imio.imsave("data/{}/images/{}".format(date, key), img)
             plt.show()
             break
             #time.sleep(0.1)
