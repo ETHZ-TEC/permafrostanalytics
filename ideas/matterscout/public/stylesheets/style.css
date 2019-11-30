@@ -96,3 +96,9 @@ h1.hometitle{
 .container-tag{
   padding:40px !important;
 }
+
+.tag-layout{
+  padding: 4px 1rem !important;
+  margin-right: 2rem !important;
+  border-radius: 4px !important;
+}
