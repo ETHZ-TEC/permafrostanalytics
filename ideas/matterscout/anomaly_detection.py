@@ -206,8 +206,17 @@ anomaly_algorithms = [("Isolation Forest", IsolationForest(behaviour='new',
                                                            random_state=42))]
 
 for name, algorithm in anomaly_algorithms:
-
     y_pred = algorithm.fit_predict(dataset.values)
+
+    os.makedirs("data/normal/", exist_ok=True)
+    normals = dataset[y_pred > 0].sample(n=100)
+    prec.loc[normals.index].median(axis=1).to_csv("data/normal/precipitation_data.csv")
+    normal_seismic = []
+    for normal_data in normals.index:
+        normal_seismic.append(get_seismic_data(date)[0])
+    normal_seismic = np.median(np.array(normal_seismic), axis=0)
+    pd.DataFrame(normal_seismic).to_csv("data/normal/seismic_data.csv")
+
     scores = algorithm.decision_function(dataset[y_pred < 0].values)
     scores_min = scores.min()
     scores_max = scores.max()
