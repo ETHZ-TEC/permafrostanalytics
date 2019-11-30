@@ -215,7 +215,8 @@ for name, algorithm in anomaly_algorithms:
     for normal_data in normals.index:
         normal_seismic.append(get_seismic_data(normal_data)[0])
     normal_seismic = np.median(np.array(normal_seismic), axis=0)
-    pd.DataFrame(normal_seismic).to_csv("data/normal/seismic_data.csv")
+    normal_seismic = pd.DataFrame(np.transpose(normal_seismic), columns=["EHE", "EHN", "EHZ"])
+    normal_seismic.to_csv("data/normal/seismic_data.csv")
 
     scores = algorithm.decision_function(dataset[y_pred < 0].values)
     scores_min = scores.min()
@@ -232,7 +233,9 @@ for name, algorithm in anomaly_algorithms:
         # print(dataset.loc[date])
         prec.loc[date].to_csv("data/{}/precipitation_data.csv".format(date))
 
-        pd.DataFrame(get_seismic_data(date)[0]).to_csv("data/{}/seismic_data.csv".format(date))
+        sism = pd.DataFrame(np.transpose(get_seismic_data(date)[0]), columns=["EHE", "EHN", "EHZ"])
+        sism["date"] = np.array([d for d in pd.date_range(date, date + timedelta(hours=1), freq='1H')])
+        sism.to_csv("data/{}/seismic_data.csv".format(date))
 
         # print(dataset.describe())
         start = str(date - timedelta(minutes=10))
