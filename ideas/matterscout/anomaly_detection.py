@@ -32,6 +32,7 @@ store = stuett.ABSStore(
     account_key=account_key,
 )
 rock_temperature_file = "MH30_temperature_rock_2017.csv"
+prec_file = "MH25_vaisalawxt520prec_2017.csv"
 derived_store = stuett.ABSStore(
     container="hackathon-on-permafrost",
     prefix="timeseries_derived_data_products",
@@ -56,9 +57,9 @@ def calculate_entropy(v):
 
 # extracts statistical features
 def min_max_estractor(row):
-    return  [np.min(row), np.max(row), np.var(row), np.mean((row-np.mean(row))**2), np.mean(row**2),#calculate_entropy(row),
-            np.percentile(row, 1), np.percentile(row, 5), np.percentile(row, 25),
-            np.percentile(row, 95), np.percentile(row, 95), np.percentile(row, 99)]
+    return  [np.min(row), np.max(row), np.var(row), np.mean(row**2)]#calculate_entropy(row),
+           #np.percentile(row, 1), np.percentile(row, 5), np.percentile(row, 25),
+            #np.percentile(row, 95), np.percentile(row, 95), np.percentile(row, 99)]
 
 
 # computes fourier transform of the signal and extracts features
@@ -87,12 +88,12 @@ def fourier_extractor(x):
 # extracts features from an hour worth of seismic data from three sensors
 def transform_hour(data):
     data = np.array(data)
-    print(data)
-    print(data.shape)
+    #print(data)
+    #print(data.shape)
     features=[]
     for first_dimension in data:
         for row in first_dimension:
-            print(row.shape)
+            #print(row.shape)
             for extractor in [min_max_estractor]:#, fourier_extractor]:
                 for element in extractor(row):
                     features.append(element)
@@ -108,17 +109,20 @@ def transform_minute(data):
 def load_seismic_source(start, end):
     output = []
     dates = []
-    for i, date in enumerate(pd.date_range(start, end, freq='15min')):
-        seismic_node = stuett.data.SeismicSource(
-            store=store,
-            station="MH36",
-            channel=["EHE", "EHN", "EHZ"],
-            start_time=date,
-            end_time=date + timedelta(minutes=15),
-        )
-        dates.append(date)
-        output.append(transform_hour(seismic_node()))
-        print(i)
+    for date in pd.date_range(start, end, freq='1H'):
+        try:
+            seismic_node = stuett.data.SeismicSource(
+                store=store,
+                station="MH36",
+                channel=["EHE", "EHN", "EHZ"],
+                start_time=date,
+                end_time=date + timedelta(hours=1),
+            )
+            print(date)
+            dates.append(date)
+            output.append(transform_hour(seismic_node()))
+        except:
+            pass
     return dates, output
 
 
@@ -131,26 +135,30 @@ def load_image_source():
     return image_node, 3
 
 
-
-dates, seismic_data = load_seismic_source(start=date(2017, 7, 29), end=date(2017, 7, 31))
-seismic_df = pd.DataFrame(seismic_data)
-seismic_df["date"] = dates
-seismic_df = seismic_df.set_index("date")
-dataset = seismic_df
-print(dataset)
-pd.DataFrame(dataset).to_csv('manual_extraction.csv')
-
-"""
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
 
 rock_temperature = rock_temperature.reset_index('name').drop(["unit"], axis=1)
-
 rock_temperature = rock_temperature.pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+rock_temperature.index.rename("date")
 
-print(rock_temperature.describe())
-dataset = rock_temperature
-"""
+prec_node = stuett.data.CsvSource(prec_file, store=derived_store)
+prec = prec_node().to_dataframe()
+prec = prec.reset_index('name').drop(["unit"], axis=1).pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+
+dates, seismic_data = load_seismic_source(start=date(2017, 1, 1), end=date(2017, 1, 3))
+seismic_data = np.array(seismic_data)
+seismic_df = pd.DataFrame(seismic_data)
+seismic_df["date"] = dates
+seismic_df = seismic_df.set_index("date")
+#dataset = seismic_df.join(rock_temperature).join(prec)
+dataset = seismic_df.join(prec)
+dataset = dataset.dropna()
+
+
+print(dataset.describe())
+dataset.to_csv("seismic_prec_temp.csv")
+
 n_samples = 300
 outliers_fraction = 0.05
 n_outliers = int(outliers_fraction * n_samples)
@@ -177,8 +185,8 @@ for name, algorithm in anomaly_algorithms:
         print("event at {}".format(date))
         print(dataset.loc[date])
         print(dataset.describe())
-        start = str(date - timedelta(minutes=1))
-        end = str(date + timedelta(minutes=10))
+        start = str(date - timedelta(minutes=10))
+        end = str(date + timedelta(minutes=60))
 
         images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
         for key in images_df["filename"]:
