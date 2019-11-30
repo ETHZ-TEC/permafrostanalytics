@@ -32,3 +32,6 @@ to generate the data in the test folder
 4. Open lw_classifier.ipynb and adjust train_data and test_data
 paths. (Optional) inspect a couple of samples from dataloaders
 as sanity check. Run the rest of the cells to start the training.
+
+#### Visualize Data
+There are different visualizations within the folder 'visualize_data'. You might have to install the 'R' package in order to run some of them. 
