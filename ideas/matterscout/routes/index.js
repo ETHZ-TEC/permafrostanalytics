@@ -8,7 +8,8 @@ var result_data = {
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
     "time":"29-08-2019",
-    "id":1
+    "id":1,
+    "severity":5
   },
   2 : {
     "name": "Bastard avalanche",
@@ -16,7 +17,8 @@ var result_data = {
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
     "time":"29-08-2019",
-    "id":2
+    "id":2,
+    "severity":11
   }
 };
 

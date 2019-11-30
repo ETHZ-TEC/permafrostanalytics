@@ -9,7 +9,12 @@ block page
             h3(class="event-card-time center")=time
             h3(style="font-weight:bold") What happened
             p=description
-            h3(style="font-weight:bold") Severity
+            h3(style="font-weight:bold; width:8rem; display:inline-block;") Severity
+            if severity<10
+                span(class="uk-label uk-label-success severity-label")="Usual"
+            else if severity>=10 && severity<=20
+                span(class="uk-label uk-label-warning severity-label")="Unusual"
+
 
             div(class="uk-container")
                 div(class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1" uk-slideshow)

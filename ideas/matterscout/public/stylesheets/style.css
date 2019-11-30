@@ -77,3 +77,11 @@ h1.hometitle{
 .navbarlist:hover{
   background: rgb(255,255,255, 0.1);
 }
+
+.severity-label{
+  display: inline-flex !important;
+  width: 5rem;
+  justify-content: center;
+  align-items: center;
+  height:1.7rem;
+}
