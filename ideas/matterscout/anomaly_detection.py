@@ -206,7 +206,7 @@ for name, algorithm in anomaly_algorithms:
         prec.loc[date].to_csv("data/{}/precipitation_data.csv".format(date))
         print(get_seismic_data(date)[0])
         #np.savetxt("data/{}/seismic_data.csv".format(date), get_seismic_data(date)[0], delimiter=",")
-        pandas.DataFrame(get_seismic_data(date)[0]).to_csv("data/{}/seismic_data.csv".format(date))
+        pd.DataFrame(get_seismic_data(date)[0]).to_csv("data/{}/seismic_data.csv".format(date))
 
         # print(dataset.describe())
         start = str(date - timedelta(minutes=10))
