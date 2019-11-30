@@ -409,7 +409,7 @@ def parse_labels(string, bb_label_mapping, static_label):
             item = [obj["right"], obj["bottom"], obj["left"], obj["top"]]
 
             item = np.array(item)
-            # convert ltwh to corner points (ltrb)
+            # resize_images ltwh to corner points (ltrb)
             # item[0] = item[0] + item[2]
             # item[1] = item[1] + item[3]
 

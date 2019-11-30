@@ -1,19 +1,1 @@
-Download and unzip following files to data folder: 
 
-- timelapse_images.zip (2010-2018)
-- timelapse_images_fast.zip (2017, Hackathon subset)
-- timeseries_derived_data_products (2010-2018)
-- timeseries_derived_data_products (2017 Hackathon subset)
-
-Create train_data and test_data folders with 
-0,1,2 subfolders respectively (according to number of classes)
-TODO: automatize this step 
-
-Open create_labels.ipynb and adjust the paths accordingly
-Run the entire notebook for multiple years consecutively
-with YEAR_FLAG = 'train' and one year with YEAR_FLAG = 'test'
-to generate the data in the test folder
-
-Open lw_classifier.ipynb and adjust train_data and test_data
-paths. (Optional) inspect a couple of samples from dataloaders
-as sanity check. Run the rest of the cells to start the training. 
