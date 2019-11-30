@@ -234,7 +234,7 @@ for name, algorithm in anomaly_algorithms:
         prec.loc[date].to_csv("data/{}/precipitation_data.csv".format(date))
 
         sism = pd.DataFrame(np.transpose(get_seismic_data(date)[0]), columns=["EHE", "EHN", "EHZ"])
-        sism["date"] = np.array([d for d in pd.date_range(date, date + timedelta(hours=1), freq='1H')])
+        sism["date"] = np.array([d for d in pd.date_range(date, date + timedelta(hours=1), freq='4ms')])
         sism.to_csv("data/{}/seismic_data.csv".format(date))
 
         # print(dataset.describe())
