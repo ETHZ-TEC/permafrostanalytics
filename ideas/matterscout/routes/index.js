@@ -9,7 +9,7 @@ var result_data = {
     "sensors": "1.csv",
     "time":"2017-02-02 07:00:00",
     "id":1,
-    "severity":5
+    "severity":2
   },
   2 : {
     "name": "Hailstorm",
