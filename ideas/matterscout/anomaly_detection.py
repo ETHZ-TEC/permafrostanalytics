@@ -149,17 +149,19 @@ def load_image_source():
 
 import shutil
 
-folder = 'data'
-for filename in os.listdir(folder):
-    file_path = os.path.join(folder, filename)
-    try:
-        if os.path.isfile(file_path) or os.path.islink(file_path):
-            os.unlink(file_path)
-        elif os.path.isdir(file_path):
-            shutil.rmtree(file_path)
-    except Exception as e:
-        print('Failed to delete %s. Reason: %s' % (file_path, e))
-
+try:
+    folder = 'data'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+except:
+    print('First time running')
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
 
@@ -232,7 +234,7 @@ for name, algorithm in anomaly_algorithms:
         images_df = anomaly_visualization.get_images_from_timestamps(image_store, start, end)()
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
-            imshow(img)
+            #imshow(img)
             print("data/{}/images/{}.png".format(date, key.split("/")[1]))
             imio.imsave("data/{}/images/{}.png".format(date, key.split("/")[1]), img)
-            plt.show()
+            #plt.show()
