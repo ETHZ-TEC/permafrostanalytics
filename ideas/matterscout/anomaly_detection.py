@@ -145,10 +145,10 @@ def load_image_source():
     )
     return image_node, 3
 
-
+"""
 os.remove("data/*")
 os.removedirs("data/*")
-
+"""
 
 rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=derived_store)
 rock_temperature = rock_temperature_node().to_dataframe()
@@ -162,7 +162,7 @@ prec_node = stuett.data.CsvSource(prec_file, store=derived_store)
 prec = prec_node().to_dataframe()
 prec = prec.reset_index('name').drop(["unit"], axis=1).pivot(columns='name', values='CSV').drop(["position"], axis=1)
 
-dates, seismic_data = load_seismic_source(start=date(2017, 1, 1), end=date(2017, 1, 3))
+dates, seismic_data = load_seismic_source(start=date(2017, 1, 2), end=date(2017, 1, 3))
 seismic_data = np.array(seismic_data)
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
@@ -202,11 +202,13 @@ for name, algorithm in anomaly_algorithms:
         os.makedirs("data/{}/images/".format(date), exist_ok=True)
 
         print("event at {}".format(date))
-        print(dataset.loc[date])
+        # print(dataset.loc[date])
         prec.loc[date].to_csv("data/{}/precipitation_data.csv".format(date))
-        np.savetxt("data/{}/seismic_data.csv".format(date), get_seismic_data(date), delimiter=",")
+        print(get_seismic_data(date)[0])
+        #np.savetxt("data/{}/seismic_data.csv".format(date), get_seismic_data(date)[0], delimiter=",")
+        pandas.DataFrame(get_seismic_data(date)[0]).to_csv("data/{}/seismic_data.csv".format(date))
 
-        print(dataset.describe())
+        # print(dataset.describe())
         start = str(date - timedelta(minutes=10))
         end = str(date + timedelta(minutes=60))
 
@@ -214,7 +216,8 @@ for name, algorithm in anomaly_algorithms:
         for key in images_df["filename"]:
             img = imio.imread(io.BytesIO(image_store[key]))
             imshow(img)
-            imio.imsave("data/{}/images/{}".format(date, key), img)
+            print("data/{}/images/{}.png".format(date, key.split("/")[1]))
+            imio.imsave("data/{}/images/{}.png".format(date, key.split("/")[1]), img)
             plt.show()
             break
             #time.sleep(0.1)
