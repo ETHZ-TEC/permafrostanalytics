@@ -15,6 +15,7 @@ from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from scipy.fftpack import fft
+from sklearn.impute import SimpleImputer
 import time
 
 account_name = (
@@ -139,22 +140,23 @@ rock_temperature_node = stuett.data.CsvSource(rock_temperature_file, store=deriv
 rock_temperature = rock_temperature_node().to_dataframe()
 
 rock_temperature = rock_temperature.reset_index('name').drop(["unit"], axis=1)
-rock_temperature = rock_temperature.pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+
+rock_temperature = rock_temperature.pivot(columns='name', values='CSV').drop(["position"], axis=1)
 rock_temperature.index.rename("date")
 
 prec_node = stuett.data.CsvSource(prec_file, store=derived_store)
 prec = prec_node().to_dataframe()
-prec = prec.reset_index('name').drop(["unit"], axis=1).pivot(columns='name', values='CSV').drop(["position"], axis=1).dropna()
+prec = prec.reset_index('name').drop(["unit"], axis=1).pivot(columns='name', values='CSV').drop(["position"], axis=1)
 
 dates, seismic_data = load_seismic_source(start=date(2017, 1, 1), end=date(2017, 1, 3))
 seismic_data = np.array(seismic_data)
 seismic_df = pd.DataFrame(seismic_data)
 seismic_df["date"] = dates
 seismic_df = seismic_df.set_index("date")
+
 #dataset = seismic_df.join(rock_temperature).join(prec)
 dataset = seismic_df.join(prec)
-dataset = dataset.dropna()
-
+dataset = pd.DataFrame(SimpleImputer(strategy="constant").fit_transform(dataset), index=dataset.index, columns=dataset.columns)
 
 print(dataset.describe())
 dataset.to_csv("seismic_prec_temp.csv")
