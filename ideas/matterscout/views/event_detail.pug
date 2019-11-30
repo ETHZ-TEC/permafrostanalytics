@@ -1,7 +1,7 @@
 extends navbar
 
 block page
-
+    script(src="/javascripts/tags.js")
 
     div(class="uk-container padding-top-card")
         div(class="uk-card uk-card-default uk-card-body")
@@ -28,5 +28,15 @@ block page
                             a(class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slideshow-item="previous")
                             a(class="uk-position-center-right uk-position-small uk-hidden-hover" href="#" uk-slidenav-next uk-slideshow-item="next")
 
-        div(id="plot_data" style="width:100%")
-        script(src="../javascripts/event.js")
+            div(id="plot_data" style="width:100%")
+            script(src="../javascripts/event.js")
+
+            div(class="uk-container container-tag")
+                form
+                    fieldset(class="uk-fieldset")
+                        legend(class="uk-legend", style="font-weight: bold;") Help us labeling this event!
+                        div(class="uk-margin")
+                            input(class="tag-input uk-input ", type="text", name="tag", placeholder="Insert a tag", id="tag-form")
+                            button(class="uk-button uk-button-primary uk-button-small", style="height:2.3rem !important;", id="tagbutton")="Add tag"
+
+                div(id="labels")

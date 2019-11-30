@@ -85,3 +85,14 @@ h1.hometitle{
   align-items: center;
   height:1.7rem;
 }
+
+.tag-input{
+  width:12rem !important;
+  display: inline-block !important;
+  margin-right: 2rem !important;
+
+}
+
+.container-tag{
+  padding:40px !important;
+}
