@@ -3,9 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Directories
-01_data/
-
 # C extensions
 *.so
 
