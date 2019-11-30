@@ -1,4 +1,4 @@
-Plotly.d3.csv("/data/2017-01-04-16:00:00", function(err, rows){
+Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv", function(err, rows){
 
     function unpack(rows, key) {
         return rows.map(function(row) { return row[key]; });
@@ -8,7 +8,7 @@ Plotly.d3.csv("/data/2017-01-04-16:00:00", function(err, rows){
     var trace1 = {
         type: "scatter",
         mode: "lines",
-        name: 'AAPL High',
+        name: 'Seismic Data',
         x: unpack(rows, 'Date'),
         y: unpack(rows, 'AAPL.High'),
         line: {color: '#17BECF'}

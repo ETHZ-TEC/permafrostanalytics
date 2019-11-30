@@ -7,16 +7,16 @@ var result_data = {
     "description":"We recorded an intense amount of rain, unusual for the period. Below you can see the details of the amount of rain recorded by our sensors.",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
-    "time":"29-08-2019",
+    "time":"2017-01-04-16:00:00",
     "id":1,
     "severity":5
   },
   2 : {
-    "name": "",
-    "description":"Oh man, fucking run away",
+    "name": "Hailstorm",
+    "description":"We recorded a light hailstorm during the morning.",
     "images": [1,2,3,4,5],
     "sensors": "1.csv",
-    "time":"29-08-2019",
+    "time":"2017-30-03-09:00:00",
     "id":2,
     "severity":1
   }
