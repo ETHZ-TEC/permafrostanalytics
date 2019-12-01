@@ -3,6 +3,7 @@
 Jim Buffat (rrrr@posteo.ch) \
 Bastian Buman (basian.buman@uzh.ch) \
 Ivan Ovinnikov (ivan.ovinnikov@gmail.com) \
+Tobias Schoch \ 
 Nik Dennler (nik.dennler@uzh.ch)
 
 ![Presentation_Slide](presentation/slide.pdf)
