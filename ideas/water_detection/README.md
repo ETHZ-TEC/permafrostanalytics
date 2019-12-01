@@ -8,12 +8,7 @@ Nik Dennler (nik.dennler@uzh.ch)
 
 ![Presentation_Slide](presentation/slide.pdf)
 
-#### Set Up
-1. Run the notebook 
-2. Run create_labels3.py for the years of interest. This creates a labels.csv file along with directories partitioning the input images. 
-3. Run the classifier, which will take these directories as input. 
-
-#### Run Classifier
+#### Set Up 
 1. Download and unzip following files to data folder: 
 
 - timelapse_images.zip (2010-2018)
@@ -25,14 +20,14 @@ Nik Dennler (nik.dennler@uzh.ch)
 0,1,2 subfolders respectively (according to number of classes)
 TODO: automatize this step 
 
-3. Open create_labels.ipynb and adjust the paths accordingly
+3. Open preprocessing.ipynb and adjust the paths accordingly
 Run the entire notebook for multiple years consecutively
 with YEAR_FLAG = 'train' and one year with YEAR_FLAG = 'test'
 to generate the data in the test folder
 
-4. Open lw_classifier.ipynb and adjust train_data and test_data
+4. Open classifier.ipynb and adjust train_data and test_data
 paths. (Optional) inspect a couple of samples from dataloaders
 as sanity check. Run the rest of the cells to start the training.
 
 #### Visualize Data
-There are different visualizations within the folder 'visualize_data'. You might have to install the 'R' package in order to run some of them. 
+There are different visualization toold within the folder 'visualize_data'. You might have to install the 'R' package in order to run some of them. 
