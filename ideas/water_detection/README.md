@@ -6,7 +6,7 @@ Ivan Ovinnikov (ivan.ovinnikov@gmail.com) \
 Tobias Schoch \ 
 Nik Dennler (nik.dennler@uzh.ch)
 
-![Presentation_Slide](presentation/slide.pdf)
+![Presentation_Slide](presentation/slide.png)
 
 #### Set Up 
 1. Download and unzip following files to data folder: 
