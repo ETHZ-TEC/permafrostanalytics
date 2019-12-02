@@ -31,6 +31,8 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
 
+from tostools.signal.tfd import tfd_zam
+
 parser = argparse.ArgumentParser(description="Seismic time series and spectogram plot")
 parser.add_argument(
     "-p",
@@ -73,8 +75,8 @@ seismic_node = stuett.data.SeismicSource(
     store=store,
     station="MH36",
     channel=["EHE", "EHN", "EHZ"],
-    start_time="2017-08-01 10:00:00",
-    end_time="2017-08-01 10:01:00",
+    start_time="2017-08-02 10:00:00",
+    end_time="2017-08-02 10:10:00",
 )
 
 ''' If you have access to the [arclink service](arclink.ethz.ch/) you can use it to load your data
@@ -114,20 +116,35 @@ for i, seed_id in enumerate(seismic_data["seed_id"]):
         )
 
 
-spectrogram = stuett.data.Spectrogram(nfft=512, stride=64, dim="time")
-spec = spectrogram(seismic_data)
+# spectrogram = stuett.data.Spectrogram(nfft=512, stride=64, dim="time")
+# spec = spectrogram(seismic_data)
+#
+# # select only one channel
+# spec = spec.sel(seed_id="4D.MH36.A.EHE", stream_id=0)
+#
+# trace_hm = go.Heatmap(
+#     x=pd.to_datetime(spec["time"].values),
+#     y=spec["frequency"].values,
+#     z=np.log(spec.values),
+#     colorscale="Jet",
+#     hoverinfo="none",
+#     colorbar={"title": "Power Spectrum/dB"},
+# )
+# fig.add_trace(trace_hm, row=2, col=1)
 
-# select only one channel
-spec = spec.sel(seed_id="4D.MH36.A.EHE", stream_id=0)
+s = pd.Series(seismic_data.sel(seed_id="4D.MH36.A.EHE", stream_id=0).values, index=pd.to_datetime(seismic_data["time"].values))
+spec2 = np.absolute(tfd_zam(s, 512, stride=64, g_len=6000, h_len=768))
 
-trace_hm = go.Heatmap(
-    x=pd.to_datetime(spec["time"].values),
-    y=spec["frequency"].values,
-    z=np.log(spec.values),
+print("spec2 done ")
+
+trace_hm2 = go.Heatmap(
+    x=spec2.index,
+    y=spec2.columns.values,
+    z=np.log(spec2.values.T),
     colorscale="Jet",
     hoverinfo="none",
     colorbar={"title": "Power Spectrum/dB"},
 )
-fig.add_trace(trace_hm, row=2, col=1)
+fig.add_trace(trace_hm2, row=2, col=1)
 
 fig.show()
