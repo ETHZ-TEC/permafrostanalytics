@@ -65,8 +65,18 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
-parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
-parser.add_argument("-hq", "--high_quality", action="store_true", help="Use the high resolution images (timelapse_images)")
+parser.add_argument(
+    "-l",
+    "--local",
+    action="store_true",
+    help="Only use local files and not data from Azure",
+)
+parser.add_argument(
+    "-hq",
+    "--high_quality",
+    action="store_true",
+    help="Use the high resolution images (timelapse_images)",
+)
 args = parser.parse_args()
 
 data_path = Path(args.path)
@@ -91,13 +101,13 @@ if not args.local:
         container="hackathon-on-permafrost",
         prefix=prefix,
         account_name=account_name,
-        account_key=account_key, 
+        account_key=account_key,
     )
     annotation_store = stuett.ABSStore(
         container="hackathon-on-permafrost",
         prefix="annotations",
         account_name=account_name,
-        account_key=account_key, 
+        account_key=account_key,
     )
 
 else:
@@ -108,7 +118,8 @@ else:
         )
     annotation_store = stuett.DirectoryStore(Path(data_path).joinpath("annotations"))
     if "annotations.csv" not in annotation_store:
-        print("WARNING: Please provide a valid path to the permafrost annotation data or see README how to download it"
+        print(
+            "WARNING: Please provide a valid path to the permafrost annotation data or see README how to download it"
         )
 
 # Setting a user directory to speed up image lookup
@@ -154,7 +165,6 @@ static_label_mapping = {
     "fog": "Fog",
     "surface_water": "Surface Water",
     "bad_image_quality": "Bad Image Quality",
-
     "snow": "Snow",
     "snowfall": "Snowfall",
     "dark": "Dark",
@@ -173,17 +183,18 @@ reverse_static_label_mapping = {v: k for k, v in static_label_mapping.items()}
 
 # TODO: generate a legend for each entry
 # These are all the labels for which bounding boxes can be drawn
-bb_label_mapping = {'#1f77b4':"Mountaineer",  # muted blue
-                    '#ff7f0e':"Headlamp",  # safety orange
-                    '#2ca02c':"Lens Flare",  # cooked asparagus green
-                    '#d62728':"Ice on lens",  # brick red
-                    '#9467bd':"Moon (visible)",  # muted purple
-                    '#8c564b':"Fog",  # chestnut brown
-                    '#e377c2':"Surface Water",  # raspberry yogurt pink
-                    '#7f7f7f':"Bad Image Quality",  # middle gray
-                    # '#bcbd22':"",  # curry yellow-green
-                    # '#17becf':""  # blue-teal
-                    }
+bb_label_mapping = {
+    "#1f77b4": "Mountaineer",  # muted blue
+    "#ff7f0e": "Headlamp",  # safety orange
+    "#2ca02c": "Lens Flare",  # cooked asparagus green
+    "#d62728": "Ice on lens",  # brick red
+    "#9467bd": "Moon (visible)",  # muted purple
+    "#8c564b": "Fog",  # chestnut brown
+    "#e377c2": "Surface Water",  # raspberry yogurt pink
+    "#7f7f7f": "Bad Image Quality",  # middle gray
+    # '#bcbd22':"",  # curry yellow-green
+    # '#17becf':""  # blue-teal
+}
 bb_label_reverse_mapping = {v: k for k, v in bb_label_mapping.items()}
 img_shape = (4288, 2848, 3)
 if args.high_quality:
@@ -229,24 +240,24 @@ def serve_layout():
                                 id="date_indicator",
                                 style={"width": "50%", "display": "inline-block"},
                             ),
-                            html.Div([
-                                dcc.Input(
-                                    id="userid_input",
-                                    placeholder="Your ID",
-                                    type="number",
-                                    value="",
-                                    persistence=True,
-                                ),
-                            ],
-                            style={"width": "50%", "display": "inline-block"},
+                            html.Div(
+                                [
+                                    dcc.Input(
+                                        id="userid_input",
+                                        placeholder="Your ID",
+                                        type="number",
+                                        value="",
+                                        persistence=True,
+                                    ),
+                                ],
+                                style={"width": "50%", "display": "inline-block"},
                             ),
-
                         ]
                     ),
                     html.Div(
                         [
                             dash_canvas.DashCanvas(
-                                width=1024,
+                                width=500,
                                 id="canvas",
                                 tool="select",
                                 lineWidth=2,
@@ -265,7 +276,8 @@ def serve_layout():
                     dcc.Dropdown(
                         id="bb_label_dropdown",
                         options=[
-                            {"label": bb_label_mapping[m], "value": m} for m in bb_label_mapping.keys()
+                            {"label": bb_label_mapping[m], "value": m}
+                            for m in bb_label_mapping.keys()
                         ],
                         value="#1f77b4",
                     ),
@@ -288,9 +300,8 @@ def serve_layout():
                    
                    Note: Rotating bounding boxes will result in incorrect labels."""
             ),
-            
         ],
-        style={"width": "100%"},  # Div
+        style={"width": "50%"},  # Div
         className="row",
     )
 
@@ -317,7 +328,11 @@ def update_output(value):
 
 @app.callback(
     Output("my-date-picker-single", "date"),
-    [Input("canvas", "prev_trigger"), Input("canvas", "next_trigger"), Input("userid_input","value")],
+    [
+        Input("canvas", "prev_trigger"),
+        Input("canvas", "next_trigger"),
+        Input("userid_input", "value"),
+    ],
     [State("index", "data")],
 )
 def reduce_help(prev_trigger, next_trigger, userid_input_value, index):
@@ -356,7 +371,7 @@ def reduce_help(prev_trigger, next_trigger, userid_input_value, index):
     elif button_id == "userid_input.value":
         if userid_input_value is not None:
             max_user = 90
-            index = int(len(data)/max_user * (userid_input_value-1))
+            index = int(len(data) / max_user * (userid_input_value - 1))
             if index < 0:
                 index = 0
             if index >= len(data):
@@ -404,12 +419,14 @@ def parse_labels(string, bb_label_mapping, static_label):
                 label = bb_label_mapping[obj["stroke"]]
                 label = reverse_static_label_mapping[label]
             except:
-                raise warning.warn(f'Could not find bb_label_mapping for {obj["stroke"]}')
+                raise warning.warn(
+                    f'Could not find bb_label_mapping for {obj["stroke"]}'
+                )
                 continue
             item = [obj["right"], obj["bottom"], obj["left"], obj["top"]]
 
             item = np.array(item)
-            # resize_images ltwh to corner points (ltrb)
+            # convert ltwh to corner points (ltrb)
             # item[0] = item[0] + item[2]
             # item[1] = item[1] + item[3]
 
@@ -496,7 +513,11 @@ def read_csv(session_id, file_id, user_id=None):
         Output("date_indicator", "children"),
         Output("static_label_dropdown", "value"),
     ],
-    [Input("my-date-picker-single", "date"), Input("session-id", "children"), Input("userid_input", "value")],
+    [
+        Input("my-date-picker-single", "date"),
+        Input("session-id", "children"),
+        Input("userid_input", "value"),
+    ],
 )
 def update_output(date, session_id, user_id):
     """ The callback is used to load a new image when the date has changed.
@@ -534,7 +555,7 @@ def update_output(date, session_id, user_id):
             info_box = "Error loading the image"
             img = np.zeros(img_shape, dtype="uint8")
 
-        #img = img[::img_downsampling, ::img_downsampling, :]
+        img = img[::img_downsampling, ::img_downsampling, :]
         image_content = array_to_data_url(img)
 
         # load data from index
@@ -549,7 +570,7 @@ def update_output(date, session_id, user_id):
         try:
             df = read_csv(session_id, file_id, user_id)
         except Exception as e:
-            print('Could not read annotation file',e)
+            print("Could not read annotation file", e)
             df = None
 
         # Load the annotations from the server

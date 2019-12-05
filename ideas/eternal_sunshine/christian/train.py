@@ -33,7 +33,7 @@ from regression_dataset import PermaRegressionDataset
 from resnet import ResNet
 from simple_bn_generator import BNGenerator
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     script_start = time()
 
     # FIXME
@@ -56,12 +56,13 @@ if __name__ == '__main__':
     ### Select device.
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    print('Using cuda: ' + str(use_cuda))
+    print("Using cuda: " + str(use_cuda))
 
     ### Generate networks.
     # FIXME Downsample images to speed up computation.
-    img_net = ResNet(in_shape=[536, 356, 3], num_outs=1, no_weights=False,
-                     use_batch_norm=True)
+    img_net = ResNet(
+        in_shape=[536, 356, 3], num_outs=1, no_weights=False, use_batch_norm=True
+    )
 
     # We include the following sensory information:
     # - surface temperature
@@ -80,21 +81,30 @@ if __name__ == '__main__':
     # FIXME Our current implementation doesn't allow efficient batch processing.
     # Neither the underlying hnet allows the usage of multiple task embeddings
     # nor does the batch norm layer support a batch of weights.
-    ts_net = BNGenerator(bn_shapes, 1, layers=[100,100], te_dim=n_in)
+    ts_net = BNGenerator(bn_shapes, 1, layers=[100, 100], te_dim=n_in)
 
     ### Generate datasets.
-    train_data = PermaRegressionDataset(args.local,
-        time_slice={"start_time": "2017-01-01", "end_time": "2017-06-30"})
-    test_data = PermaRegressionDataset(args.local,
-                                       time_slice={"start_time": "2017-07-01",
-                                                   "end_time": "2017-07-31"})
+    train_data = PermaRegressionDataset(
+        args.local, time_slice={"start_time": "2017-01-01", "end_time": "2017-06-30"}
+    )
+    test_data = PermaRegressionDataset(
+        args.local, time_slice={"start_time": "2017-07-01", "end_time": "2017-07-31"}
+    )
 
-    train_loader = DataLoader(train_data, batch_size=args.batch_size,
-                              shuffle=True, num_workers=args.num_workers)
-    test_loader = DataLoader(test_data, batch_size=args.batch_size,
-                             shuffle=False, num_workers=args.num_workers)
+    train_loader = DataLoader(
+        train_data,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
+    )
+    test_loader = DataLoader(
+        test_data,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+    )
 
     ### Train and test.
-    raise NotImplementedError('Training and testing not implemented yet.')
+    raise NotImplementedError("Training and testing not implemented yet.")
 
-    print('Program finished successfully in %f sec.' % (time() - script_start))
+    print("Program finished successfully in %f sec." % (time() - script_start))

@@ -53,7 +53,7 @@ for i, blob in enumerate(generator):
         break
 
 print("List some documents")
-# In stuett we can use a a zarr store and load the data from there 
+# In stuett we can use a a zarr store and load the data from there
 store = stuett.ABSStore(
     container="hackathon-on-permafrost",
     prefix="docs/",

@@ -78,7 +78,7 @@ for item in files:
     except Exception as e:
         print(e)
 
-print('Extracting files')
+print("Extracting files")
 for item in files:
     filename = data_dir / item
     with zipfile.ZipFile(filename, "r") as zip_file:
