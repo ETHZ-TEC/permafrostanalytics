@@ -246,7 +246,7 @@ def serve_layout():
                     html.Div(
                         [
                             dash_canvas.DashCanvas(
-                                width=1024,
+                                width=500,
                                 id="canvas",
                                 tool="select",
                                 lineWidth=2,
@@ -290,7 +290,7 @@ def serve_layout():
             ),
             
         ],
-        style={"width": "100%"},  # Div
+        style={"width": "50%"},  # Div
         className="row",
     )
 
@@ -409,7 +409,7 @@ def parse_labels(string, bb_label_mapping, static_label):
             item = [obj["right"], obj["bottom"], obj["left"], obj["top"]]
 
             item = np.array(item)
-            # resize_images ltwh to corner points (ltrb)
+            # convert ltwh to corner points (ltrb)
             # item[0] = item[0] + item[2]
             # item[1] = item[1] + item[3]
 
@@ -534,7 +534,7 @@ def update_output(date, session_id, user_id):
             info_box = "Error loading the image"
             img = np.zeros(img_shape, dtype="uint8")
 
-        #img = img[::img_downsampling, ::img_downsampling, :]
+        img = img[::img_downsampling, ::img_downsampling, :]
         image_content = array_to_data_url(img)
 
         # load data from index
