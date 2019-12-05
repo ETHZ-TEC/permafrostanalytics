@@ -32,7 +32,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from ast import literal_eval as make_tuple
-from tqdm import tqdm 
+from tqdm import tqdm
 
 from torch import Tensor
 from scipy.io import wavfile
@@ -42,22 +42,41 @@ from torch.utils.data.dataset import Dataset
 from PIL import Image
 import io
 
-from pathlib import Path 
+from pathlib import Path
+
 
 class PytorchDataset(stuett.data.SegmentedDataset):
-    def __init__(self, data=None, label=None, label_list_file=None, store=None, transform=None, mode="train", dataset_slice=None, batch_dims=None,random_seed=1045,train_split=0.7 ):
-        super().__init__(data=data, label=label,dataset_slice=dataset_slice,batch_dims=batch_dims, discard_empty=True)
+    def __init__(
+        self,
+        data=None,
+        label=None,
+        label_list_file=None,
+        store=None,
+        transform=None,
+        mode="train",
+        dataset_slice=None,
+        batch_dims=None,
+        random_seed=1045,
+        train_split=0.7,
+    ):
+        super().__init__(
+            data=data,
+            label=label,
+            dataset_slice=dataset_slice,
+            batch_dims=batch_dims,
+            discard_empty=True,
+        )
 
         self.store = store
         self.transform = transform
 
         self.label_list = None
-        if isinstance(label_list_file,str) or isinstance(label_list_file,Path):
+        if isinstance(label_list_file, str) or isinstance(label_list_file, Path):
             self.load_list(label_list_file)
-        elif isinstance(label_list_file,pd.DataFrame):
+        elif isinstance(label_list_file, pd.DataFrame):
             self.label_list = label_list_file
         if self.label_list is None:
-            print('Computing labels. This might take long...')
+            print("Computing labels. This might take long...")
             # if something we couldn't load a file
             # recompute and save
             self.label_list = self.compute_label_list()
@@ -66,38 +85,38 @@ class PytorchDataset(stuett.data.SegmentedDataset):
         # Train and test set must get the same list otherwise it's not guaranteed
         # that sets are non-overlapping
         np.random.seed(random_seed)
-        indices = np.arange(len(self.label_list))  
+        indices = np.arange(len(self.label_list))
         np.random.shuffle(indices)
-        split = np.floor(len(self.label_list)*train_split).astype(np.int)
+        split = np.floor(len(self.label_list) * train_split).astype(np.int)
 
         if mode is "train":
             self.label = self.label_list.iloc[indices[:split]]
         elif mode is "test":
             self.label = self.label_list.iloc[indices[split:]]
 
-    def store_list(self,path):
+    def store_list(self, path):
         row_list = []
         print(self.label_list)
         for key, row in self.label_list.iterrows():
             row_dict = {}
-            row_dict['id'] = key
-            for dim in row['indexers']:
-                start_item  = 'start_'+str(dim)
-                end_item  = 'end_'+str(dim)
-                row_dict[start_item] = str(row['indexers'][dim].start)
-                row_dict[end_item] = str(row['indexers'][dim].stop)
-            for label in row['labels']:
+            row_dict["id"] = key
+            for dim in row["indexers"]:
+                start_item = "start_" + str(dim)
+                end_item = "end_" + str(dim)
+                row_dict[start_item] = str(row["indexers"][dim].start)
+                row_dict[end_item] = str(row["indexers"][dim].stop)
+            for label in row["labels"]:
                 if pd.isnull(label):
-                    label = ''
+                    label = ""
                 row_dict_copy = row_dict.copy()
-                row_dict_copy['__target'] = label
+                row_dict_copy["__target"] = label
                 row_list.append(row_dict_copy)
 
         df = pd.DataFrame(row_list)
-        df.to_csv(path,index=False)
-            
-    def load_list(self,path):
-        try: 
+        df.to_csv(path, index=False)
+
+    def load_list(self, path):
+        try:
             x = stuett.data.BoundingBoxAnnotation(filename=path)()
         except:
             return
@@ -107,14 +126,14 @@ class PytorchDataset(stuett.data.SegmentedDataset):
         classes = []
         row_dict = {}
         for i in range(len(x)):
-            j = x['id'].values[i]
+            j = x["id"].values[i]
             if j not in row_dict:
                 row_dict[j] = {}
-                row_dict[j]['indexers'] = slices[i]
-                row_dict[j]['labels'] = [x.values[i]]
-                
+                row_dict[j]["indexers"] = slices[i]
+                row_dict[j]["labels"] = [x.values[i]]
+
             else:
-                row_dict[j]['labels'] += [x.values[i]]
+                row_dict[j]["labels"] += [x.values[i]]
             if x.values[i] not in classes and pd.notnull(x.values[i]):
                 classes.append(x.values[i])
         df = pd.DataFrame([row_dict[key] for key in row_dict])
@@ -124,14 +143,15 @@ class PytorchDataset(stuett.data.SegmentedDataset):
     def __len__(self):
         return len(self.label)
 
+
 class ImageDataset(PytorchDataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        
-        label_info  = self.label.iloc[idx]
-        indexers    = label_info['indexers']
-        label       = label_info['labels']
+
+        label_info = self.label.iloc[idx]
+        indexers = label_info["indexers"]
+        label = label_info["labels"]
 
         target = np.zeros((len(self.classes),))
         for l in label:
@@ -147,7 +167,7 @@ class ImageDataset(PytorchDataset):
 
         # print(key)
         img = Image.open(io.BytesIO(self.store[key]))
-        data = np.array(img.convert('RGB')).transpose([2,0,1])
+        data = np.array(img.convert("RGB")).transpose([2, 0, 1])
         data = data.astype(np.float32)
 
         if self.transform is not None:
@@ -155,7 +175,7 @@ class ImageDataset(PytorchDataset):
         # if self.target_transform is not None:
         #     target = self.target_transform(target)
 
-        return data, target        
+        return data, target
 
 
 class SeismicDataset(PytorchDataset):
@@ -163,21 +183,21 @@ class SeismicDataset(PytorchDataset):
 
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        
+
         label_info = self.label.iloc[idx]
-        indexers   = label_info['indexers']
-        label   = label_info['labels']
+        indexers = label_info["indexers"]
+        label = label_info["labels"]
 
         target = np.zeros((len(self.classes),))
         for l in label:
             if pd.notnull(l):
                 target[self.classes[l]] = 1
 
-#        print(label_info)
+        #        print(label_info)
 
         # print(indexers['time'])
         data = self.get_data(indexers)
-        
+
         if self.transform is not None:
             data = self.transform(data)
 
@@ -193,26 +213,27 @@ class SeismicDataset(PytorchDataset):
 
 
 class DatasetMerger(Dataset):
-    def __init__(self,list_of_datasets):
+    def __init__(self, list_of_datasets):
         self.__list_of_datasets = list_of_datasets
 
-
-        self.__info = np.zeros((len(self),2),dtype=np.int)
+        self.__info = np.zeros((len(self), 2), dtype=np.int)
 
         set_index = 0
         for i, dataset in enumerate(self.__list_of_datasets):
-            self.__info[set_index:set_index+len(dataset),0] = np.arange(0,len(dataset))
-            self.__info[set_index:set_index+len(dataset),1] = i
+            self.__info[set_index : set_index + len(dataset), 0] = np.arange(
+                0, len(dataset)
+            )
+            self.__info[set_index : set_index + len(dataset), 1] = i
             set_index = len(dataset)
 
-    def get_dataset(self,idx):
+    def get_dataset(self, idx):
         """get dataset given the idx
         
         Arguments:
             idx {integer} -- the index for which the dataset should be retrieved
         """
-        dataset_id = self.__info[idx,1]
-        return self.__list_of_datasets[dataset_id] 
+        dataset_id = self.__info[idx, 1]
+        return self.__list_of_datasets[dataset_id]
 
     def __len__(self):
         length = 0
@@ -221,10 +242,9 @@ class DatasetMerger(Dataset):
         return length
 
     def __getitem__(self, idx):
-        dataset_id = self.__info[idx,1]
-        dataset_idx = self.__info[idx,0]
+        dataset_id = self.__info[idx, 1]
+        dataset_idx = self.__info[idx, 0]
         return self.__list_of_datasets[dataset_id][dataset_idx]
-
 
 
 class DatasetFreezer(Dataset):
@@ -244,43 +264,45 @@ class DatasetFreezer(Dataset):
         # if path is not None:
         #     self.freeze()
 
-    def freeze(self,reload=False):
+    def freeze(self, reload=False):
         if self.__bypass:
             return
 
-        os.makedirs(self.__path,exist_ok=True)
+        os.makedirs(self.__path, exist_ok=True)
 
         # if not os.path.isdir(self.__path):
         #     raise FileNotFoundError('The folder {} cannot be found.'.format(self.__path))
 
         # TODO: parquet is not ideal, rather go for zarr
-        filename = self.__path.joinpath('{}.parquet'.format('datafile'))
+        filename = self.__path.joinpath("{}.parquet".format("datafile"))
         if os.path.isfile(filename) and not reload:
             self.parquet_file = pq.ParquetFile(filename)
-            assert len(self) == self.parquet_file.num_row_groups, 'Potentially corrupted file: Preprocessed data file does not match the length of the dataset'
+            assert (
+                len(self) == self.parquet_file.num_row_groups
+            ), "Potentially corrupted file: Preprocessed data file does not match the length of the dataset"
             self.__frozen = True
             return
 
         pqwriter = None
         for i in tqdm(range(len(self))):
-            value = self[i]               
+            value = self[i]
             df = pd.DataFrame()
-            if isinstance(value,tuple):
-                for j,element in enumerate(value):
-                    df['data_%d'%j] = [np.array(element).flatten()]
+            if isinstance(value, tuple):
+                for j, element in enumerate(value):
+                    df["data_%d" % j] = [np.array(element).flatten()]
             else:
-                df['data_0'] = [np.array(value).flatten()]
+                df["data_0"] = [np.array(value).flatten()]
 
             table = pa.Table.from_pandas(df)
             metadata = table.schema.metadata
             if metadata is None:
                 metadata = collections.OrderedDict()
 
-            if isinstance(value,tuple):
-                for j,element in enumerate(value):
-                    metadata['shape_%d'%j] = str(np.array(element).shape)
+            if isinstance(value, tuple):
+                for j, element in enumerate(value):
+                    metadata["shape_%d" % j] = str(np.array(element).shape)
             else:
-                metadata['shape_0'] = str(np.array(value).shape)
+                metadata["shape_0"] = str(np.array(value).shape)
 
             table = table.replace_schema_metadata(metadata)
 
@@ -297,7 +319,7 @@ class DatasetFreezer(Dataset):
         self.__frozen = True
         # assert len(self) == self.parquet_file.num_row_groups
 
-    def get_frozen(self,idx):
+    def get_frozen(self, idx):
         row_group = self.parquet_file.read_row_group(idx)
 
         row_df = row_group.to_pandas()
@@ -306,12 +328,13 @@ class DatasetFreezer(Dataset):
         # return_tuple = ()
         return_list = []
         for j, element in enumerate(list(row_df)):
-            data_shape = make_tuple(str(row_group.schema.metadata[b'shape_%d'%j].decode('ascii')))
-            tensor = Tensor(row_df['data_%d'%j].values[0].reshape(data_shape))
+            data_shape = make_tuple(
+                str(row_group.schema.metadata[b"shape_%d" % j].decode("ascii"))
+            )
+            tensor = Tensor(row_df["data_%d" % j].values[0].reshape(data_shape))
             # return_tuple += tuple(tensor)
             return_list.append(tensor)
 
-        
         # print(return_tuple)
         # print(type(return_tuple))
         # TODO: make this more generic. Currenlty, we are only expecting data or data+target
@@ -321,12 +344,11 @@ class DatasetFreezer(Dataset):
             # return return_list[0], torch.Tensor([self.targets[idx]])
             return return_list[0], return_list[1]
 
-
     def __getattr__(self, item):
-       result = getattr(self.__dataset, item)
-    #    if callable(result):
-    #        result = tocontainer(result)
-       return result
+        result = getattr(self.__dataset, item)
+        #    if callable(result):
+        #        result = tocontainer(result)
+        return result
 
     def __len__(self):
         return len(self.__dataset)

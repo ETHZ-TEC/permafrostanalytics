@@ -78,7 +78,7 @@ if args.azure:
             container="hackathon-public-rw",
             prefix="",
             account_name=account_name,
-            account_key=account_key, 
+            account_key=account_key,
         )
 else:
     input_store = stuett.DirectoryStore(args.user_annotations)
@@ -95,22 +95,27 @@ for key in input_store.keys():
     df["__session"] = str(fn.parent)
     filename = fn.name
     if filename not in annotation_dict:
-        annotation_dict[filename] = {'key':key,'modif_ts':pd.to_datetime(df['__creation_time'].iloc[0])} 
+        annotation_dict[filename] = {
+            "key": key,
+            "modif_ts": pd.to_datetime(df["__creation_time"].iloc[0]),
+        }
     else:
-        current_time = annotation_dict[filename]['modif_ts']
-        new_time = pd.to_datetime(df['__creation_time'].iloc[0])
+        current_time = annotation_dict[filename]["modif_ts"]
+        new_time = pd.to_datetime(df["__creation_time"].iloc[0])
         if new_time > current_time:
-            print('Newer annotation found for %s. Replace in dict' % file_name)
-            annotation_dict[filename] = annotation_dict[filename] = {'key':key, 'modif_ts':new_time} 
-        
+            print("Newer annotation found for %s. Replace in dict" % file_name)
+            annotation_dict[filename] = annotation_dict[filename] = {
+                "key": key,
+                "modif_ts": new_time,
+            }
+
 
 df_list = []
 for filename in annotation_dict:
-    key = annotation_dict[filename]['key']
-    df = stuett.read_csv_with_store(input_store,key)
+    key = annotation_dict[filename]["key"]
+    df = stuett.read_csv_with_store(input_store, key)
     df_list.append(df)
 
 df = pd.concat(df_list)
-print('Saving...')
-stuett.to_csv_with_store(output_store, 'annotations.csv', df)
-
+print("Saving...")
+stuett.to_csv_with_store(output_store, "annotations.csv", df)

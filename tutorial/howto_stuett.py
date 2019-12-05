@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
 import stuett
+
 # What is stuett?
 # A data management package developed for analysing and visualizing outdoor sensor deployments
 # The name originates from the lower german word "stütt" which means "support"
@@ -109,4 +110,3 @@ print(one_day_5cm_10cm)
 #### Data formats ####
 # Note: The timezone used within stuett is UTC, but the datetime objects you receive are not timezone aware.
 #       Timezone issues are a recurring problem so be careful when working with the data.
-

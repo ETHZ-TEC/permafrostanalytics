@@ -28,7 +28,7 @@ from pathlib import Path
 import pandas as pd
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-import pandas as pd 
+import pandas as pd
 
 parser = argparse.ArgumentParser(description="Seismic time series and spectogram plot")
 parser.add_argument(
@@ -38,7 +38,9 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
-parser.add_argument("-l", "--local", action="store_true", help="Load data from local storage")
+parser.add_argument(
+    "-l", "--local", action="store_true", help="Load data from local storage"
+)
 args = parser.parse_args()
 
 data_path = Path(args.path)
@@ -65,33 +67,25 @@ else:
 
 
 df = stuett.read_csv_with_store(annotation_store, "automatic_labels_mountaineers.csv")
-df['start_time'] = pd.to_datetime(df['start_time'] )
-df['end_time'] = pd.to_datetime(df['end_time'] )
-df.index = df['start_time']
-df = df['2017-08-01':'2017-08-02']
+df["start_time"] = pd.to_datetime(df["start_time"])
+df["end_time"] = pd.to_datetime(df["end_time"])
+df.index = df["start_time"]
+df = df["2017-08-01":"2017-08-02"]
 
 
 fig = go.Figure(
     layout=dict(
         xaxis={"type": "date"},
-        xaxis_range=[
-            pd.to_datetime("2017-08-01"),
-            pd.to_datetime("2017-08-02"),
-        ],
+        xaxis_range=[pd.to_datetime("2017-08-01"), pd.to_datetime("2017-08-02"),],
     )
 )
 
-for i,row in df.iterrows():
-    if(pd.isnull(row['__target'])):
+for i, row in df.iterrows():
+    if pd.isnull(row["__target"]):
         continue
     fig.add_trace(
         go.Scatter(
-            x=[
-                row['start_time'],
-                row['end_time'],
-                row['end_time'],
-                row['start_time'],
-            ],
+            x=[row["start_time"], row["end_time"], row["end_time"], row["start_time"],],
             y=[0, 0, 1, 1],
             fill="toself",
             fillcolor="darkviolet",
@@ -102,7 +96,7 @@ for i,row in df.iterrows():
             showlegend=False,
             # line_width=0,
             opacity=0.5,
-            text=str(row['__target']),
+            text=str(row["__target"]),
             hoverinfo="text+x+y",
         )
     )

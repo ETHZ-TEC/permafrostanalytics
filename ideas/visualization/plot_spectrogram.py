@@ -39,7 +39,12 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data/")),
     help="The path to the folder containing the permafrost hackathon data",
 )
-parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
+parser.add_argument(
+    "-l",
+    "--local",
+    action="store_true",
+    help="Only use local files and not data from Azure",
+)
 args = parser.parse_args()
 
 data_path = Path(args.path)
@@ -58,7 +63,7 @@ if not args.local:
         container="hackathon-on-permafrost",
         prefix="seismic_data/4D/",
         account_name=account_name,
-        account_key=account_key, 
+        account_key=account_key,
     )
 else:
     seismic_folder = Path(data_path).joinpath("seismic_data/4D/")
@@ -77,7 +82,7 @@ seismic_node = stuett.data.SeismicSource(
     end_time="2017-08-02 10:01:00",
 )
 
-''' If you have access to the [arclink service](arclink.ethz.ch/) you can use it to load your data
+""" If you have access to the [arclink service](arclink.ethz.ch/) you can use it to load your data
     You can use the following two lines of code, but be careful not to accidentally publish your password!
     ```
     stuett.global_config.set_setting("arclink", {"user": "yourusername", "password":"yourpassword"})
@@ -91,7 +96,7 @@ seismic_node = stuett.data.SeismicSource(
     The right location of the config file can be found by executing
     ```
     python -c "import stuett;print(stuett.global_config.get_user_config_file())"
-    ```'''
+    ```"""
 
 
 seismic_data = seismic_node()
@@ -105,7 +110,8 @@ fig.update_layout(title_text="Time series and spectrogram")
 for i, seed_id in enumerate(seismic_data["seed_id"]):
     for j, stream_id in enumerate(seismic_data["stream_id"]):
         fig.add_trace(
-            go.Scatter(name = str(seed_id.values),
+            go.Scatter(
+                name=str(seed_id.values),
                 x=pd.to_datetime(seismic_data["time"].values),
                 y=seismic_data.sel(seed_id=seed_id, stream_id=stream_id).values,
             ),

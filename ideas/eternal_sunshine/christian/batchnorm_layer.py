@@ -56,6 +56,7 @@ import torch.nn.functional as F
 
 from warnings import warn
 
+
 class BatchNormLayer(nn.Module):
     r"""Hypernetwork-compatible batch-normalization layer.
 
@@ -120,9 +121,16 @@ class BatchNormLayer(nn.Module):
             (m_{\text{stats}}^{(T)}, v_{\text{stats}}^{(T)}) \}`. This number is
             incremented everytime the method :meth:`checkpoint_stats` is called.
     """
-    def __init__(self, num_features, momentum=0.1, affine=True,
-                 track_running_stats=True, frozen_stats=False,
-                 learnable_stats=False):
+
+    def __init__(
+        self,
+        num_features,
+        momentum=0.1,
+        affine=True,
+        track_running_stats=True,
+        frozen_stats=False,
+        learnable_stats=False,
+    ):
         r"""
         Args:
             num_features: See argument ``num_features``, for instance, of class
@@ -169,8 +177,9 @@ class BatchNormLayer(nn.Module):
             # not allow backpropagation.
             # See here on how they are computed:
             # https://github.com/pytorch/pytorch/blob/96fe2b4ecbbd02143d95f467655a2d697282ac32/aten/src/ATen/native/Normalization.cpp#L137
-            raise NotImplementedError('Option "learnable_stats" has not been ' +
-                                      'implemented yet!')
+            raise NotImplementedError(
+                'Option "learnable_stats" has not been ' + "implemented yet!"
+            )
 
         if momentum is None:
             # If one wants to implement this, then please note that the
@@ -178,17 +187,23 @@ class BatchNormLayer(nn.Module):
             # extra code for computing the momentum value in the forward method
             # of class `_BatchNorm`:
             # https://pytorch.org/docs/stable/_modules/torch/nn/modules/batchnorm.html#_BatchNorm
-            raise NotImplementedError('This reimplementation of PyTorch its ' +
-                                      'batchnorm layer does not support ' +
-                                      'setting "momentum" to None.')
+            raise NotImplementedError(
+                "This reimplementation of PyTorch its "
+                + "batchnorm layer does not support "
+                + 'setting "momentum" to None.'
+            )
 
         if learnable_stats and track_running_stats:
-            raise ValueError('Option "track_running_stats" must be set to ' +
-                             'False when enabling "learnable_stats".')
+            raise ValueError(
+                'Option "track_running_stats" must be set to '
+                + 'False when enabling "learnable_stats".'
+            )
 
         if frozen_stats and track_running_stats:
-            raise ValueError('Option "track_running_stats" must be set to ' +
-                             'False when enabling "frozen_stats".')
+            raise ValueError(
+                'Option "track_running_stats" must be set to '
+                + 'False when enabling "frozen_stats".'
+            )
 
         self._num_features = num_features
         self._momentum = momentum
@@ -197,18 +212,20 @@ class BatchNormLayer(nn.Module):
         self._frozen_stats = frozen_stats
         self._learnable_stats = learnable_stats
 
-        self.register_buffer('_num_stats', torch.tensor(0, dtype=torch.long))
+        self.register_buffer("_num_stats", torch.tensor(0, dtype=torch.long))
 
         self._weights = nn.ParameterList()
         self._param_shapes = [[num_features], [num_features]]
 
         if affine:
             # Gamma
-            self.register_parameter('scale', nn.Parameter( \
-                torch.Tensor(num_features), requires_grad=True))
+            self.register_parameter(
+                "scale", nn.Parameter(torch.Tensor(num_features), requires_grad=True)
+            )
             # Beta
-            self.register_parameter('bias', nn.Parameter( \
-                torch.Tensor(num_features), requires_grad=True))
+            self.register_parameter(
+                "bias", nn.Parameter(torch.Tensor(num_features), requires_grad=True)
+            )
 
             self._weights.append(self.scale)
             self._weights.append(self.bias)
@@ -261,7 +278,7 @@ class BatchNormLayer(nn.Module):
         """
         # FIXME not implemented attribute. Do we even need the attribute, given
         # that all components are individually passed to the forward method?
-        raise NotImplementedError('Not implemented yet!')
+        raise NotImplementedError("Not implemented yet!")
         return self._hyper_shapes
 
     @property
@@ -273,8 +290,15 @@ class BatchNormLayer(nn.Module):
         """
         return self._num_stats
 
-    def forward(self, inputs, running_mean=None, running_var=None, weight=None,
-                bias=None, stats_id=None):
+    def forward(
+        self,
+        inputs,
+        running_mean=None,
+        running_var=None,
+        weight=None,
+        bias=None,
+        stats_id=None,
+    ):
         r"""Apply batch normalization to given layer activations.
 
         Based on the state if this module (attribute :attr:`training`), the
@@ -388,14 +412,20 @@ class BatchNormLayer(nn.Module):
         Returns:
             The layer activation ``inputs`` after batch-norm has been applied.
         """
-        assert(running_mean is None and running_var is None or \
-               running_mean is not None and running_var is not None)
+        assert (
+            running_mean is None
+            and running_var is None
+            or running_mean is not None
+            and running_var is not None
+        )
 
         if not self._affine:
             if weight is None or bias is None:
-                raise ValueError('Layer was generated in non-affine mode. ' +
-                                 'Therefore, arguments "weight" and "bias" ' +
-                                 'may not be None.')
+                raise ValueError(
+                    "Layer was generated in non-affine mode. "
+                    + 'Therefore, arguments "weight" and "bias" '
+                    + "may not be None."
+                )
 
         # No gains given but we have internal gains.
         # Otherwise, if no gains are given we leave `weight` as None.
@@ -406,14 +436,16 @@ class BatchNormLayer(nn.Module):
 
         stats_given = running_mean is not None
 
-        if (running_mean is None or running_var is None):
-            if stats_id is None  and self.num_stats > 1:
-                raise ValueError('Parameter "stats_id" is not defined but ' +
-                                 'multiple running stats are available.')
+        if running_mean is None or running_var is None:
+            if stats_id is None and self.num_stats > 1:
+                raise ValueError(
+                    'Parameter "stats_id" is not defined but '
+                    + "multiple running stats are available."
+                )
             elif self._track_running_stats:
                 if stats_id is None:
                     stats_id = 0
-                assert(stats_id < self.num_stats)
+                assert stats_id < self.num_stats
 
                 rm, rv = self.get_stats(stats_id)
 
@@ -422,43 +454,64 @@ class BatchNormLayer(nn.Module):
                 if running_var is None:
                     running_var = rv
         elif stats_id is not None:
-            warn('Parameter "stats_id" is ignored since running stats have ' +
-                 'been provided.')
+            warn(
+                'Parameter "stats_id" is ignored since running stats have '
+                + "been provided."
+            )
 
         momentum = self._momentum
 
         if stats_given or self._track_running_stats:
-            return F.batch_norm(inputs, running_mean, running_var,
-                                weight=weight, bias=bias,
-                                training=self.training, momentum=momentum)
+            return F.batch_norm(
+                inputs,
+                running_mean,
+                running_var,
+                weight=weight,
+                bias=bias,
+                training=self.training,
+                momentum=momentum,
+            )
 
         if self._learnable_stats:
             raise NotImplementedError()
 
         if self._frozen_stats:
-            return F.batch_norm(inputs, running_mean, running_var,
-                                weight=weight, bias=bias, training=False)
+            return F.batch_norm(
+                inputs,
+                running_mean,
+                running_var,
+                weight=weight,
+                bias=bias,
+                training=False,
+            )
 
             # TODO implement scale and shift here. Note, that `running_mean` and
             # `running_var` are always 0 and 1, resp. Therefore, the call to
             # `F.batch_norm` is a waste of computation.
-            #ret = inputs
-            #if weight is not None:
+            # ret = inputs
+            # if weight is not None:
             #    # Multiply `ret` with `weight` such that dimensions are
             #    # respected.
             #    pass
-            #if bias is not None:
+            # if bias is not None:
             #    # Add `bias` to modified `ret` such that dimensions are
             #    # respected.
             #    pass
-            #return ret
+            # return ret
 
         else:
-            assert(not self._track_running_stats)
+            assert not self._track_running_stats
 
             # Always compute statistics based on current batch.
-            return F.batch_norm(inputs, None, None, weight=weight, bias=bias,
-                                training=True, momentum=momentum)
+            return F.batch_norm(
+                inputs,
+                None,
+                None,
+                weight=weight,
+                bias=bias,
+                training=True,
+                momentum=momentum,
+            )
 
     def checkpoint_stats(self, device=None):
         """Buffers for a new set of running stats will be registered.
@@ -471,12 +524,11 @@ class BatchNormLayer(nn.Module):
                 will either be moved to the device of the most recent statistics
                 or to CPU if no prior statistics exist.
         """
-        assert(self._track_running_stats or \
-               self._frozen_stats and self._num_stats == 0)
+        assert self._track_running_stats or self._frozen_stats and self._num_stats == 0
 
         if device is None:
             if self.num_stats > 0:
-                mname_old, _ = self._stats_names(self._num_stats-1)
+                mname_old, _ = self._stats_names(self._num_stats - 1)
                 device = getattr(self, mname_old).device
 
         if self._learnable_stats:
@@ -485,10 +537,8 @@ class BatchNormLayer(nn.Module):
         mname, vname = self._stats_names(self._num_stats)
         self._num_stats += 1
 
-        self.register_buffer(mname, torch.zeros(self._num_features,
-                                                device=device))
-        self.register_buffer(vname, torch.ones(self._num_features,
-                                               device=device))
+        self.register_buffer(mname, torch.zeros(self._num_features, device=device))
+        self.register_buffer(vname, torch.ones(self._num_features, device=device))
 
     def get_stats(self, stats_id=None):
         """Get a set of running statistics (means and variances).
@@ -505,7 +555,7 @@ class BatchNormLayer(nn.Module):
         """
         if stats_id is None:
             stats_id = self.num_stats - 1
-        assert(stats_id < self.num_stats)
+        assert stats_id < self.num_stats
 
         mname, vname = self._stats_names(stats_id)
 
@@ -513,7 +563,6 @@ class BatchNormLayer(nn.Module):
         running_var = getattr(self, vname)
 
         return running_mean, running_var
-
 
     def _stats_names(self, stats_id):
         """Get the buffer names for mean and variance statistics depending on
@@ -528,12 +577,11 @@ class BatchNormLayer(nn.Module):
             - **mean_name**
             - **var_name**
         """
-        mean_name = 'mean_%d' % stats_id
-        var_name = 'var_%d' % stats_id
+        mean_name = "mean_%d" % stats_id
+        var_name = "var_%d" % stats_id
 
         return mean_name, var_name
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     pass
-
-

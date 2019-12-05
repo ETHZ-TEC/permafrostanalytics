@@ -43,9 +43,13 @@ class PermaRegressionDataset(Dataset):
     """A dataset that maps images and meta information (such as radiation,
     surface temperature, ...) onto the temperature below surface."""
 
-    def __init__(self, local, data_path='../data', transform=None,
-                 time_slice={"start_time": "2017-01-01",
-                             "end_time": "2017-12-31"}):
+    def __init__(
+        self,
+        local,
+        data_path="../data",
+        transform=None,
+        time_slice={"start_time": "2017-01-01", "end_time": "2017-12-31"},
+    ):
         """
         Args:
             local (bool): Whether to read the dataset from a local storage
@@ -79,8 +83,7 @@ class PermaRegressionDataset(Dataset):
                 else "storageaccountperma8980"
             )
             account_key = (
-                get_setting("azure")["account_key"] if setting_exists(
-                    "azure") else None
+                get_setting("azure")["account_key"] if setting_exists("azure") else None
             )
 
             ts_store = stuett.ABSStore(
@@ -98,39 +101,42 @@ class PermaRegressionDataset(Dataset):
             )
 
         else:
-            timeseries_folder = Path(data_path).joinpath(
-                "timeseries_derived_data_products").resolve()
+            timeseries_folder = (
+                Path(data_path).joinpath("timeseries_derived_data_products").resolve()
+            )
             ts_store = stuett.DirectoryStore(timeseries_folder)
             if rock_temperature_file_mh10 not in store:
-                raise RuntimeError('Please provide a valid path to the ' +
-                                   'permafrost data!')
+                raise RuntimeError(
+                    "Please provide a valid path to the " + "permafrost data!"
+                )
 
-            img_store = stuett.DirectoryStore(Path(data_path).joinpath( \
-                'timelapse_images_fast'))
+            img_store = stuett.DirectoryStore(
+                Path(data_path).joinpath("timelapse_images_fast")
+            )
             if "2017-01-01/20170101_080018.JPG" not in store:
-                raise RuntimeError('Please provide a valid path to the ' +
-                                   'permafrost images.')
+                raise RuntimeError(
+                    "Please provide a valid path to the " + "permafrost images."
+                )
 
-        #self._ts_store = ts_store
+        # self._ts_store = ts_store
         self._img_store = img_store
 
         ### Load timeseries data.
         rock_temperature_node_mh10 = stuett.data.CsvSource(
-            rock_temperature_file_mh10, store=ts_store)
+            rock_temperature_file_mh10, store=ts_store
+        )
         rock_temp_mh10 = rock_temperature_node_mh10(time_slice)
 
         radiation_node = stuett.data.CsvSource(radiation_file, store=ts_store)
         radiation = radiation_node(time_slice)
 
-        net_radiation = radiation.loc[:, ['net_radiation']]
-        surface_temp = rock_temp_mh10.loc[:, ['temperature_nearsurface_t2']]
-        target_temp = rock_temp_mh10.loc[:, ['temperature_10cm']]
+        net_radiation = radiation.loc[:, ["net_radiation"]]
+        surface_temp = rock_temp_mh10.loc[:, ["temperature_nearsurface_t2"]]
+        target_temp = rock_temp_mh10.loc[:, ["temperature_10cm"]]
 
         ### Load image filenames.
         image_node = stuett.data.MHDSLRFilenames(
-            store=img_store,
-            force_write_to_remote=True,
-            as_pandas=False,
+            store=img_store, force_write_to_remote=True, as_pandas=False,
         )
         image_fns = image_node(time_slice)
 
@@ -141,21 +147,23 @@ class PermaRegressionDataset(Dataset):
         # ignored.
 
         # Sanity check!
-        #for t1, t2 in zip(radiation['time'], rock_temp_mh10['time']):
+        # for t1, t2 in zip(radiation['time'], rock_temp_mh10['time']):
         #    assert (t1 == t2)
 
         j = 0
-        n = len(image_fns['time'])
+        n = len(image_fns["time"])
 
         measurement_pairs = []
 
-        for i, t in enumerate(rock_temp_mh10['time'].values):
+        for i, t in enumerate(rock_temp_mh10["time"].values):
             while j < n:
                 # Translate difference in timestamps to minutes before casting
                 # to int.
-                diff = (image_fns['time'][j] - t).values.astype( \
-                    'timedelta64[m]').astype(np.int)
-
+                diff = (
+                    (image_fns["time"][j] - t)
+                    .values.astype("timedelta64[m]")
+                    .astype(np.int)
+                )
 
                 if diff > 10:
                     # Image too far in the future, ignore sensor value.
@@ -168,8 +176,10 @@ class PermaRegressionDataset(Dataset):
                     # image.
                     if j + 1 < n:
                         absdiff2 = np.abs(
-                            (image_fns['time'][j + 1] - t).values.astype(
-                                'timedelta64[m]').astype(np.int))
+                            (image_fns["time"][j + 1] - t)
+                            .values.astype("timedelta64[m]")
+                            .astype(np.int)
+                        )
                     else:
                         absdiff2 = None
 
@@ -202,9 +212,9 @@ class PermaRegressionDataset(Dataset):
         self._month = []
         self._daytime = []
 
-        assert(np.all(~np.isnan(net_radiation.values)))
-        assert(np.all(~np.isnan(surface_temp.values)))
-        #assert(np.all(~np.isnan(target_temp.values)))
+        assert np.all(~np.isnan(net_radiation.values))
+        assert np.all(~np.isnan(surface_temp.values))
+        # assert(np.all(~np.isnan(target_temp.values)))
 
         for i, j in measurement_pairs:
             if np.any(np.isnan(target_temp.values[i, 0])):
@@ -214,10 +224,10 @@ class PermaRegressionDataset(Dataset):
             self._surface_temp.append(surface_temp.values[i, 0])
             self._radiation.append(net_radiation.values[i, 0])
 
-            self._timestamps.append(target_temp['time'].values[i])
+            self._timestamps.append(target_temp["time"].values[i])
             ts = pd.to_datetime(self._timestamps[-1])
             self._month.append(ts.month)
-            self._daytime.append(ts.hour*60 + ts.minute)
+            self._daytime.append(ts.hour * 60 + ts.minute)
 
             self._img_fns.append(str(image_fns.values[0, j]))
 
@@ -238,20 +248,20 @@ class PermaRegressionDataset(Dataset):
         self.radiation_mean = self._radiation.mean()
         self.radiation_std = self._radiation.std()
 
-        self._target_temp = (self._target_temp - self.target_temp_mean) / \
-            self.target_temp_std
+        self._target_temp = (
+            self._target_temp - self.target_temp_mean
+        ) / self.target_temp_std
 
-        self._surface_temp = (self._surface_temp - self.surface_temp_mean) / \
-            self.surface_temp_std
+        self._surface_temp = (
+            self._surface_temp - self.surface_temp_mean
+        ) / self.surface_temp_std
 
-        self._radiation = (self._radiation - self.radiation_mean) / \
-            self.radiation_std
+        self._radiation = (self._radiation - self.radiation_mean) / self.radiation_std
 
         self._month = (self._month - self._month.mean()) / self._month.std()
-        self._daytime = (self._month - self._daytime.mean()) / \
-            self._daytime.std()
+        self._daytime = (self._month - self._daytime.mean()) / self._daytime.std()
 
-        print('dataset contains %d samples.' % len(self._img_fns))
+        print("dataset contains %d samples." % len(self._img_fns))
 
     def __len__(self):
         return len(self._img_fns)
@@ -266,21 +276,21 @@ class PermaRegressionDataset(Dataset):
         else:
             img = Image.open(io.BytesIO(self._img_store[self._img_fns[idx]]))
             img = img.rotate(90, expand=1)
-            data = np.array(img.convert('RGB')).transpose([2, 0, 1])
+            data = np.array(img.convert("RGB")).transpose([2, 0, 1])
             data = data.astype(np.float32)
 
-            ts =  self._timestamps[idx]
+            ts = self._timestamps[idx]
 
         sample = {
-            'img': data,
-            'surface_temp': self._surface_temp[idx].reshape(-1, 1),
-            'target_temp': self._target_temp[idx].reshape(-1, 1),
-            'radiation': self._radiation[idx].reshape(-1, 1),
-            'month': self._month[idx].reshape(-1, 1),
-            'daytime': self._daytime[idx].reshape(-1, 1),
+            "img": data,
+            "surface_temp": self._surface_temp[idx].reshape(-1, 1),
+            "target_temp": self._target_temp[idx].reshape(-1, 1),
+            "radiation": self._radiation[idx].reshape(-1, 1),
+            "month": self._month[idx].reshape(-1, 1),
+            "daytime": self._daytime[idx].reshape(-1, 1),
             # Just for the user, not meant to be used as input to a neural net.
             #'timestamp': ts,
-            'idx': idx
+            "idx": idx,
         }
 
         return sample

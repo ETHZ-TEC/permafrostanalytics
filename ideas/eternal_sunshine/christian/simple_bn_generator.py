@@ -52,17 +52,33 @@ import numpy as np
 
 from resnet import init_params
 
+
 class BNGenerator(nn.Module):
     """This network consists of a series of fully-connected layers to generate
     weights for another fully-connected network.
 
     Attributes (additional to base class):
     """
-    def __init__(self, target_shapes, num_tasks, layers=[50, 100], verbose=True,
-                 te_dim=8, no_te_embs=False, activation_fn=torch.nn.ReLU(),
-                 use_bias=True, no_weights=False, init_weights=None,
-                 ce_dim=None, dropout_rate=-1, use_spectral_norm=False,
-                 use_batch_norm=False, noise_dim=-1, temb_std=-1):
+
+    def __init__(
+        self,
+        target_shapes,
+        num_tasks,
+        layers=[50, 100],
+        verbose=True,
+        te_dim=8,
+        no_te_embs=False,
+        activation_fn=torch.nn.ReLU(),
+        use_bias=True,
+        no_weights=False,
+        init_weights=None,
+        ce_dim=None,
+        dropout_rate=-1,
+        use_spectral_norm=False,
+        use_batch_norm=False,
+        noise_dim=-1,
+        temb_std=-1,
+    ):
         """Build the network. The network will consist of several hidden layers
         and a dedicated output layer for each weight matrix/bias vector.
 
@@ -119,25 +135,31 @@ class BNGenerator(nn.Module):
         nn.Module.__init__(self)
 
         if use_spectral_norm:
-            raise NotImplementedError('Spectral normalization not yet ' +
-                                      'implemented for this hypernetwork type.')
+            raise NotImplementedError(
+                "Spectral normalization not yet "
+                + "implemented for this hypernetwork type."
+            )
         if use_batch_norm:
             # Note, batch normalization only makes sense when batch processing
             # is applied during training (i.e., batch size > 1).
             # As long as we only support processing of 1 task embedding, that
             # means that external inputs are required.
             if ce_dim is None:
-                raise ValueError('Can\'t use batchnorm as long as ' +
-                                 'hypernetwork process more than 1 sample ' +
-                                 '("ce_dim" must be specified).')
-            raise NotImplementedError('Batch normalization not yet ' +
-                                      'implemented for this hypernetwork type.')
+                raise ValueError(
+                    "Can't use batchnorm as long as "
+                    + "hypernetwork process more than 1 sample "
+                    + '("ce_dim" must be specified).'
+                )
+            raise NotImplementedError(
+                "Batch normalization not yet "
+                + "implemented for this hypernetwork type."
+            )
 
-        assert(len(target_shapes) > 0)
-        assert(no_te_embs or num_tasks > 0)
+        assert len(target_shapes) > 0
+        assert no_te_embs or num_tasks > 0
         self._num_tasks = num_tasks
 
-        assert(init_weights is None or no_weights is False)
+        assert init_weights is None or no_weights is False
         self._no_weights = no_weights
         self._no_te_embs = no_te_embs
         self._te_dim = te_dim
@@ -150,15 +172,16 @@ class BNGenerator(nn.Module):
         self._dropout_rate = dropout_rate
         self._noise_dim = noise_dim
         self._temb_std = temb_std
-        self._shifts = None # FIXME temporary test.
+        self._shifts = None  # FIXME temporary test.
 
         ### Hidden layers
-        self._gen_layers(layers, te_dim, use_bias, no_weights, init_weights,
-                         ce_dim, noise_dim)
+        self._gen_layers(
+            layers, te_dim, use_bias, no_weights, init_weights, ce_dim, noise_dim
+        )
 
         self._dropout = None
         if dropout_rate != -1:
-            assert(dropout_rate >= 0 and dropout_rate <= 1)
+            assert dropout_rate >= 0 and dropout_rate <= 1
             self._dropout = nn.Dropout(dropout_rate)
 
         # Task embeddings.
@@ -167,28 +190,31 @@ class BNGenerator(nn.Module):
         else:
             self._task_embs = nn.ParameterList()
             for _ in range(num_tasks):
-                self._task_embs.append(nn.Parameter(data=torch.Tensor(te_dim),
-                                                    requires_grad=True))
-                torch.nn.init.normal_(self._task_embs[-1], mean=0., std=1.)
+                self._task_embs.append(
+                    nn.Parameter(data=torch.Tensor(te_dim), requires_grad=True)
+                )
+                torch.nn.init.normal_(self._task_embs[-1], mean=0.0, std=1.0)
 
         self._theta_shapes = self._hidden_dims + self._out_dims
 
         ntheta = ntheta = np.sum([np.prod(s) for s in self._theta_shapes])
-        ntembs = int(np.sum([t.numel() for t in self._task_embs])) \
-                if not no_te_embs else 0
+        ntembs = (
+            int(np.sum([t.numel() for t in self._task_embs])) if not no_te_embs else 0
+        )
         self._num_weights = ntheta + ntembs
 
         self._num_outputs = np.sum([np.prod(s) for s in self._target_shapes])
 
         if verbose:
-            print('Constructed hypernetwork with %d parameters (' % (ntheta \
-                  + ntembs) + '%d network weights + %d task embedding weights).'
-                  % (ntheta, ntembs))
-            print('The hypernetwork has a total of %d outputs.'
-                  % self._num_outputs)
+            print(
+                "Constructed hypernetwork with %d parameters (" % (ntheta + ntembs)
+                + "%d network weights + %d task embedding weights)." % (ntheta, ntembs)
+            )
+            print("The hypernetwork has a total of %d outputs." % self._num_outputs)
 
-    def _gen_layers(self, layers, te_dim, use_bias, no_weights, init_weights,
-                    ce_dim, noise_dim):
+    def _gen_layers(
+        self, layers, te_dim, use_bias, no_weights, init_weights, ce_dim, noise_dim
+    ):
         """Generate all layers of this network. This method will create
         the parameters of each layer. Note, this method should only be
         called by the constructor.
@@ -232,14 +258,14 @@ class BNGenerator(nn.Module):
         # it only contains a weight matrix per layer.
         self._theta = nn.ParameterList()
         for i, dims in enumerate(self._hidden_dims + self._out_dims):
-            self._theta.append(nn.Parameter(torch.Tensor(*dims),
-                                            requires_grad=True))
+            self._theta.append(nn.Parameter(torch.Tensor(*dims), requires_grad=True))
 
         if init_weights is not None:
-            assert (len(init_weights) == len(self._theta))
+            assert len(init_weights) == len(self._theta)
             for i in range(len(init_weights)):
-                assert (np.all(np.equal(list(init_weights[i].shape),
-                                        list(self._theta[i].shape))))
+                assert np.all(
+                    np.equal(list(init_weights[i].shape), list(self._theta[i].shape))
+                )
                 self._theta[i].data = init_weights[i]
         else:
             for i in range(0, len(self._theta), 2 if use_bias else 1):
@@ -249,28 +275,39 @@ class BNGenerator(nn.Module):
                     init_params(self._theta[i])
 
     # @override from CLHyperNetInterface
-    def forward(self, task_id=None, theta=None, dTheta=None, task_emb=None,
-                ext_inputs=None, squeeze=True):
+    def forward(
+        self,
+        task_id=None,
+        theta=None,
+        dTheta=None,
+        task_emb=None,
+        ext_inputs=None,
+        squeeze=True,
+    ):
         """Implementation of abstract super class method."""
         if task_id is None and task_emb is None:
-            raise Exception('The hyper network has to get either a task ID' +
-                            'to choose the learned embedding or directly ' +
-                            'get an embedding as input (e.g. from a task ' +
-                            'recognition model).')
+            raise Exception(
+                "The hyper network has to get either a task ID"
+                + "to choose the learned embedding or directly "
+                + "get an embedding as input (e.g. from a task "
+                + "recognition model)."
+            )
 
         if self._theta is None and theta is None:
-            raise Exception('Network was generated without internal weights. ' +
-                            'Hence, "theta" option may not be None.')
+            raise Exception(
+                "Network was generated without internal weights. "
+                + 'Hence, "theta" option may not be None.'
+            )
 
         if theta is None:
             theta = self._theta
         else:
-            assert(len(theta) == len(self._theta_shapes))
+            assert len(theta) == len(self._theta_shapes)
             for i, s in enumerate(self._theta_shapes):
-                assert(np.all(np.equal(s, list(theta[i].shape))))
+                assert np.all(np.equal(s, list(theta[i].shape)))
 
         if dTheta is not None:
-            assert(len(dTheta) == len(self._theta_shapes))
+            assert len(dTheta) == len(self._theta_shapes)
 
             weights = []
             for i, t in enumerate(theta):
@@ -280,9 +317,11 @@ class BNGenerator(nn.Module):
 
         # Select task embeddings.
         if self._task_embs is None and task_emb is None:
-            raise Exception('The network was created with no internal task ' +
-                            'embeddings, thus parameter "task_emb" has to ' +
-                            'be specified.')
+            raise Exception(
+                "The network was created with no internal task "
+                + 'embeddings, thus parameter "task_emb" has to '
+                + "be specified."
+            )
 
         if task_emb is None:
             task_emb = self._task_embs[task_id]
@@ -291,13 +330,17 @@ class BNGenerator(nn.Module):
 
         # Concatenate additional embeddings to task embedding, if given.
         if self._size_ext_input is not None and ext_inputs is None:
-            raise Exception('The network was created to expect additional ' +
-                            'inputs, thus parameter "ext_inputs" has to ' +
-                            'be specified.')
+            raise Exception(
+                "The network was created to expect additional "
+                + 'inputs, thus parameter "ext_inputs" has to '
+                + "be specified."
+            )
         elif self._size_ext_input is None and ext_inputs is not None:
-            raise Exception('The network was created to not expect ' +
-                            'additional embeddings, thus parameter ' +
-                            '"ext_inputs" cannot be specified.')
+            raise Exception(
+                "The network was created to not expect "
+                + "additional embeddings, thus parameter "
+                + '"ext_inputs" cannot be specified.'
+            )
 
         if ext_inputs is not None:
             # FIXME at the moment, we only process one task embedding at a time,
@@ -322,7 +365,7 @@ class BNGenerator(nn.Module):
         for i in range(0, len(self._hidden_dims), 2 if self._use_bias else 1):
             b = None
             if self._use_bias:
-                b = weights[i+1]
+                b = weights[i + 1]
             h = F.linear(h, weights[i], bias=b)
             if self._act_fn is not None:
                 h = self._act_fn(h)
@@ -330,21 +373,23 @@ class BNGenerator(nn.Module):
                 h = self._dropout(h)
         outputs = []
         j = 0
-        for i in range(len(self._hidden_dims), len(self._theta_shapes),
-                       2 if self._use_bias else 1):
+        for i in range(
+            len(self._hidden_dims), len(self._theta_shapes), 2 if self._use_bias else 1
+        ):
             b = None
             if self._use_bias:
-                b = weights[i+1]
+                b = weights[i + 1]
             W = F.linear(h, weights[i], bias=b)
             W = W.view(batch_size, *self._target_shapes[j])
             if squeeze:
                 W = torch.squeeze(W, dim=0)
-            if self._shifts is not None: # FIXME temporary test!
+            if self._shifts is not None:  # FIXME temporary test!
                 W += self._shifts[j]
             outputs.append(W)
             j += 1
 
         return outputs
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     pass

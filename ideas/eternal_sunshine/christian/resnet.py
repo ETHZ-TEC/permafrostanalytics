@@ -30,6 +30,7 @@ import torch.nn.functional as F
 
 from batchnorm_layer import BatchNormLayer
 
+
 class ResNet(nn.Module):
     """A resnet with :math:`6n+2` layers with :math:`3n` residual blocks,
     consisting of two layers each.
@@ -94,10 +95,19 @@ hyper_shapes_distilled` and the current statistics will be returned by the
             Note, this attribute may only be ``True`` if ``bn_track_stats``
             is ``True``.
     """
-    def __init__(self, in_shape=[536, 356, 3],
-                 num_outs=1, verbose=True, n=5, no_weights=False,
-                 init_weights=None, use_batch_norm=True,
-                 bn_track_stats=True, distill_bn_stats=False):
+
+    def __init__(
+        self,
+        in_shape=[536, 356, 3],
+        num_outs=1,
+        verbose=True,
+        n=5,
+        no_weights=False,
+        init_weights=None,
+        use_batch_norm=True,
+        bn_track_stats=True,
+        distill_bn_stats=False,
+    ):
         nn.Module.__init__(self)
 
         self._num_outs = num_outs
@@ -106,10 +116,10 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
         self._use_context_mod = False
 
-        assert(init_weights is None or not no_weights)
+        assert init_weights is None or not no_weights
         self._no_weights = no_weights
 
-        assert(not use_batch_norm or (not distill_bn_stats or bn_track_stats))
+        assert not use_batch_norm or (not distill_bn_stats or bn_track_stats)
 
         self._use_batch_norm = use_batch_norm
         self._bn_track_stats = bn_track_stats
@@ -139,23 +149,28 @@ hyper_shapes_distilled` and the current statistics will be returned by the
         # count the number of weights afterwards. But it's an additional sanity
         # check for us.
         fs = self._filter_sizes
-        num_weights = np.prod(self._kernel_size) * \
-            (in_shape[2] * fs[0] + np.sum([fs[i] * fs[i+1] + \
-                (2*n-1) * fs[i+1]**2 for i in range(3)])) + \
-            (fs[0] + 2*n * np.sum([fs[i] for i in range(1, 4)])) + \
-            (fs[-1] * num_outs + num_outs)
-
-
+        num_weights = (
+            np.prod(self._kernel_size)
+            * (
+                in_shape[2] * fs[0]
+                + np.sum(
+                    [fs[i] * fs[i + 1] + (2 * n - 1) * fs[i + 1] ** 2 for i in range(3)]
+                )
+            )
+            + (fs[0] + 2 * n * np.sum([fs[i] for i in range(1, 4)]))
+            + (fs[-1] * num_outs + num_outs)
+        )
 
         if use_batch_norm:
             # The gamma and beta parameters of a batch norm layer are
             # learned as well.
-            num_weights += 2 * (fs[0] + \
-                                2*n*np.sum([fs[i] for i in range(1, 4)]))
+            num_weights += 2 * (fs[0] + 2 * n * np.sum([fs[i] for i in range(1, 4)]))
 
         if verbose:
-            print('A ResNet with %d layers and %d weights is created.' \
-                  % (6*n+2, num_weights))
+            print(
+                "A ResNet with %d layers and %d weights is created."
+                % (6 * n + 2, num_weights)
+            )
 
         ################################################
         ### Define and initialize batch norm weights ###
@@ -171,23 +186,28 @@ hyper_shapes_distilled` and the current statistics will be returned by the
                 if i == 0:
                     num = 1
                 else:
-                    num = 2*n
+                    num = 2 * n
 
                 for j in range(num):
-                    bn_layer = BatchNormLayer(s, affine=not no_weights,
-                        track_running_stats=bn_track_stats)
+                    bn_layer = BatchNormLayer(
+                        s, affine=not no_weights, track_running_stats=bn_track_stats
+                    )
                     self._batchnorm_layers.append(bn_layer)
 
                     if distill_bn_stats:
-                        self._hyper_shapes_distilled.extend( \
-                            [list(p.shape) for p in bn_layer.get_stats(0)])
+                        self._hyper_shapes_distilled.extend(
+                            [list(p.shape) for p in bn_layer.get_stats(0)]
+                        )
 
                     if not no_weights and init_weights is not None:
-                        assert(len(bn_layer.weights) == 2)
+                        assert len(bn_layer.weights) == 2
                         for ii in range(2):
-                            assert(np.all(np.equal( \
+                            assert np.all(
+                                np.equal(
                                     list(init_weights[bn_ind].shape),
-                                    list(bn_layer.weights[ii].shape))))
+                                    list(bn_layer.weights[ii].shape),
+                                )
+                            )
                             bn_layer.weights[ii].data = init_weights[bn_ind]
                             bn_ind += 1
 
@@ -197,8 +217,7 @@ hyper_shapes_distilled` and the current statistics will be returned by the
         # Note, method `_compute_hyper_shapes` doesn't take context-mod into
         # consideration.
         self._param_shapes.extend(self._compute_hyper_shapes(no_weights=True))
-        assert(num_weights == \
-               np.sum([np.prod(l) for l in self._param_shapes]))
+        assert num_weights == np.sum([np.prod(l) for l in self._param_shapes])
 
         self._layer_weight_tensors = nn.ParameterList()
         self._layer_bias_vectors = nn.ParameterList()
@@ -222,34 +241,46 @@ hyper_shapes_distilled` and the current statistics will be returned by the
         ###########################################
         ### Does not include context-mod or batchnorm weights.
         # First layer.
-        self._layer_weight_tensors.append(nn.Parameter(
-            torch.Tensor(self._filter_sizes[0], self._in_shape[2],
-                *self._kernel_size),
-            requires_grad=True))
-        self._layer_bias_vectors.append(nn.Parameter(
-            torch.Tensor(self._filter_sizes[0]), requires_grad=True))
+        self._layer_weight_tensors.append(
+            nn.Parameter(
+                torch.Tensor(
+                    self._filter_sizes[0], self._in_shape[2], *self._kernel_size
+                ),
+                requires_grad=True,
+            )
+        )
+        self._layer_bias_vectors.append(
+            nn.Parameter(torch.Tensor(self._filter_sizes[0]), requires_grad=True)
+        )
 
         # Each block consists of 2n layers.
         for i in range(1, len(self._filter_sizes)):
-            in_filters = self._filter_sizes[i-1]
+            in_filters = self._filter_sizes[i - 1]
             out_filters = self._filter_sizes[i]
 
-            for _ in range(2*n):
-                self._layer_weight_tensors.append(nn.Parameter(
-                    torch.Tensor(out_filters, in_filters, *self._kernel_size),
-                    requires_grad=True))
-                self._layer_bias_vectors.append(nn.Parameter(
-                    torch.Tensor(out_filters), requires_grad=True))
+            for _ in range(2 * n):
+                self._layer_weight_tensors.append(
+                    nn.Parameter(
+                        torch.Tensor(out_filters, in_filters, *self._kernel_size),
+                        requires_grad=True,
+                    )
+                )
+                self._layer_bias_vectors.append(
+                    nn.Parameter(torch.Tensor(out_filters), requires_grad=True)
+                )
                 # Note, that the first layer in this block has potentially a
                 # different number of input filters.
                 in_filters = out_filters
 
         # After the average pooling, there is one more dense layer.
-        self._layer_weight_tensors.append(nn.Parameter(
-            torch.Tensor(num_outs, self._filter_sizes[-1]),
-            requires_grad=True))
-        self._layer_bias_vectors.append(nn.Parameter(torch.Tensor(num_outs),
-                                                     requires_grad=True))
+        self._layer_weight_tensors.append(
+            nn.Parameter(
+                torch.Tensor(num_outs, self._filter_sizes[-1]), requires_grad=True
+            )
+        )
+        self._layer_bias_vectors.append(
+            nn.Parameter(torch.Tensor(num_outs), requires_grad=True)
+        )
 
         # We add the weights interleaved, such that there are always consecutive
         # weight tensor and bias vector per layer. This fulfils the requirements
@@ -261,20 +292,20 @@ hyper_shapes_distilled` and the current statistics will be returned by the
         ### Initialize weights.
         if init_weights is not None:
             num_layers = 6 * n + 2
-            assert(len(init_weights) == 2 * num_layers)
+            assert len(init_weights) == 2 * num_layers
             offset = 0
             if use_batch_norm:
                 offset = 2 * (6 * n + 1)
-            assert(len(self._weights) == offset + 2 * num_layers)
+            assert len(self._weights) == offset + 2 * num_layers
             for i in range(len(init_weights)):
                 j = offset + i
-                assert(np.all(np.equal(list(init_weights[i].shape),
-                                       list(self._weights[j].shape))))
+                assert np.all(
+                    np.equal(list(init_weights[i].shape), list(self._weights[j].shape))
+                )
                 self._weights[j].data = init_weights[i]
         else:
             for i in range(len(self._layer_weight_tensors)):
-                init_params(self._layer_weight_tensors[i],
-                            self._layer_bias_vectors[i])
+                init_params(self._layer_weight_tensors[i], self._layer_bias_vectors[i])
 
     def forward(self, x, weights=None, distilled_params=None, condition=None):
         """Compute the output :math:`y` of this network given the input
@@ -327,8 +358,10 @@ hyper_shapes_distilled` and the current statistics will be returned by the
             y: The output of the network.
         """
         if self._no_weights and weights is None:
-            raise Exception('Network was generated without weights. ' +
-                            'Hence, "weights" option may not be None.')
+            raise Exception(
+                "Network was generated without weights. "
+                + 'Hence, "weights" option may not be None.'
+            )
 
         ############################################
         ### Extract which weights should be used ###
@@ -346,17 +379,17 @@ hyper_shapes_distilled` and the current statistics will be returned by the
             int_weights = None
 
             if isinstance(weights, dict):
-                assert('internal_weights' in weights.keys())
-                if 'internal_weights' in weights.keys():
-                    int_weights = weights['internal_weights']
+                assert "internal_weights" in weights.keys()
+                if "internal_weights" in weights.keys():
+                    int_weights = weights["internal_weights"]
             else:
-                assert(len(weights) == len(self.param_shapes))
+                assert len(weights) == len(self.param_shapes)
                 int_weights = weights
 
             int_shapes = self.param_shapes[n_cm:]
-            assert(len(int_weights) == len(int_shapes))
+            assert len(int_weights) == len(int_shapes)
             for i, s in enumerate(int_shapes):
-                assert(np.all(np.equal(s, list(int_weights[i].shape))))
+                assert np.all(np.equal(s, list(int_weights[i].shape)))
 
         ########################
         ### Parse condition ###
@@ -366,9 +399,9 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
         if condition is not None:
             if isinstance(condition, dict):
-                assert('bn_stats_id' in condition.keys())
-                if 'bn_stats_id' in condition.keys():
-                    bn_cond = condition['bn_stats_id']
+                assert "bn_stats_id" in condition.keys()
+                if "bn_stats_id" in condition.keys():
+                    bn_cond = condition["bn_stats_id"]
             else:
                 bn_cond = condition
 
@@ -390,28 +423,29 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
         if distilled_params is not None:
             if not self._distill_bn_stats:
-                raise ValueError('Argument "distilled_params" can only be ' +
-                                 'provided if the return value of ' +
-                                 'method "distillation_targets()" is not None.')
+                raise ValueError(
+                    'Argument "distilled_params" can only be '
+                    + "provided if the return value of "
+                    + 'method "distillation_targets()" is not None.'
+                )
             shapes = self.hyper_shapes_distilled
-            assert(len(distilled_params) == len(shapes))
+            assert len(distilled_params) == len(shapes)
             for i, s in enumerate(shapes):
-                assert(np.all(np.equal(s, list(distilled_params[i].shape))))
+                assert np.all(np.equal(s, list(distilled_params[i].shape)))
 
             # Extract batchnorm stats from distilled_params
             for i in range(0, len(distilled_params), 2):
-                running_means[i//2] = distilled_params[i]
-                running_vars[i//2] = distilled_params[i+1]
+                running_means[i // 2] = distilled_params[i]
+                running_vars[i // 2] = distilled_params[i + 1]
 
-        elif self._use_batch_norm and self._bn_track_stats and \
-                bn_cond is None:
+        elif self._use_batch_norm and self._bn_track_stats and bn_cond is None:
             for i, bn_layer in enumerate(self._batchnorm_layers):
                 running_means[i], running_vars[i] = bn_layer.get_stats()
 
         ###############################################
         ### Extract weight tensors and bias vectors ###
         ###############################################
-        assert(self._has_bias)
+        assert self._has_bias
         w_weights = []
         b_weights = []
         for i, p in enumerate(layer_weights):
@@ -450,17 +484,25 @@ hyper_shapes_distilled` and the current statistics will be returned by the
             """
             nonlocal layer_ind, bn_ind
 
-            h = F.conv2d(h, w_weights[layer_ind], bias=b_weights[layer_ind],
-                             stride=stride, padding=1)
+            h = F.conv2d(
+                h,
+                w_weights[layer_ind],
+                bias=b_weights[layer_ind],
+                stride=stride,
+                padding=1,
+            )
             layer_ind += 1
 
             # Batch-norm
             if self._use_batch_norm:
-                h = self._batchnorm_layers[bn_ind].forward(h,
+                h = self._batchnorm_layers[bn_ind].forward(
+                    h,
                     running_mean=running_means[bn_ind],
                     running_var=running_vars[bn_ind],
-                    weight=bn_weights[2*bn_ind],
-                    bias=bn_weights[2*bn_ind+1], stats_id=bn_cond)
+                    weight=bn_weights[2 * bn_ind],
+                    bias=bn_weights[2 * bn_ind + 1],
+                    stats_id=bn_cond,
+                )
                 bn_ind += 1
 
             # Note, as can be seen in figure 5 of the original paper, the
@@ -473,8 +515,8 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
             return h
 
-        #x = x.view(*([-1] + self._in_shape))
-        #x = x.permute(0, 3, 1, 2)
+        # x = x.view(*([-1] + self._in_shape))
+        # x = x.permute(0, 3, 1, 2)
         h = x
 
         ### Initial convolutional layer.
@@ -499,9 +541,10 @@ hyper_shapes_distilled` and the current statistics will be returned by the
                     # additionally have to subsample the input.
                     # This implementation is motivated by
                     #    https://git.io/fhcfk
-                    fs = self._filter_sizes[i+1]
-                    shortcut_h = F.pad(h[:, :, ::2, ::2],
-                        (0, 0, 0, 0, fs//4, fs//4), "constant", 0)
+                    fs = self._filter_sizes[i + 1]
+                    shortcut_h = F.pad(
+                        h[:, :, ::2, ::2], (0, 0, 0, 0, fs // 4, fs // 4), "constant", 0
+                    )
 
                 h = conv_layer(h, stride, shortcut=None)
 
@@ -562,9 +605,9 @@ hyper_shapes_distilled` and the current statistics will be returned by the
                 if i == 0:
                     num = 1
                 else:
-                    num = 2*n
+                    num = 2 * n
 
-                for _ in range(2*num):
+                for _ in range(2 * num):
                     ret.append([s])
 
         f_in = self._in_shape[-1]
@@ -573,7 +616,7 @@ hyper_shapes_distilled` and the current statistics will be returned by the
             if i == 0:
                 num = 1
             else:
-                num = 2*n
+                num = 2 * n
 
             for _ in range(num):
                 ret.append([f_out, f_in, *ks])
@@ -627,13 +670,13 @@ hyper_shapes_distilled` and the current statistics will be returned by the
         in_shape = self._in_shape
         fs = self._filter_sizes
         ks = self._kernel_size
-        pd = 1 # all paddings are 1.
-        assert(len(ks) == 2)
-        assert(len(fs) == 4)
+        pd = 1  # all paddings are 1.
+        assert len(ks) == 2
+        assert len(fs) == 4
         n = self._n
 
         # Note, `in_shape` is in Tensorflow layout.
-        assert(len(in_shape) == 3)
+        assert len(in_shape) == 3
         in_shape = [in_shape[2], *in_shape[:2]]
 
         ret = []
@@ -645,34 +688,35 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
         # First conv layer (stride 1).
         C = fs[0]
-        H = (H - ks[0] + 2*pd) // 1 + 1
-        W = (W - ks[1] + 2*pd) // 1 + 1
+        H = (H - ks[0] + 2 * pd) // 1 + 1
+        W = (W - ks[1] + 2 * pd) // 1 + 1
         ret.append([C, H, W])
 
         # First block (no strides).
         C = fs[1]
-        H = (H - ks[0] + 2*pd) // 1 + 1
-        W = (W - ks[1] + 2*pd) // 1 + 1
-        ret.extend([[C, H, W]] * (2*n))
+        H = (H - ks[0] + 2 * pd) // 1 + 1
+        W = (W - ks[1] + 2 * pd) // 1 + 1
+        ret.extend([[C, H, W]] * (2 * n))
 
         # Second block (first layer has stride 2).
         C = fs[2]
-        H = (H - ks[0] + 2*pd) // 2 + 1
-        W = (W - ks[1] + 2*pd) // 2 + 1
-        ret.extend([[C, H, W]] * (2*n))
+        H = (H - ks[0] + 2 * pd) // 2 + 1
+        W = (W - ks[1] + 2 * pd) // 2 + 1
+        ret.extend([[C, H, W]] * (2 * n))
 
         # Third block (first layer has stride 2).
         C = fs[3]
-        H = (H - ks[0] + 2*pd) // 2 + 1
-        W = (W - ks[1] + 2*pd) // 2 + 1
-        ret.extend([[C, H, W]] * (2*n))
+        H = (H - ks[0] + 2 * pd) // 2 + 1
+        W = (W - ks[1] + 2 * pd) // 2 + 1
+        ret.extend([[C, H, W]] * (2 * n))
 
         # Final fully-connected layer (after avg pooling), i.e., output size.
         ret.append([self._num_outs])
 
-        assert(len(ret) == 6*n + 2)
+        assert len(ret) == 6 * n + 2
 
         return ret
+
 
 def init_params(weights, bias=None):
     """Initialize the weights and biases of a linear or (transpose) conv layer.
@@ -695,5 +739,6 @@ def init_params(weights, bias=None):
         bound = 1 / math.sqrt(fan_in)
         nn.init.uniform_(bias, -bound, bound)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     pass

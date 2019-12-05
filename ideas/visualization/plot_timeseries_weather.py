@@ -36,7 +36,12 @@ parser.add_argument(
     default=str(Path(__file__).absolute().parent.joinpath("..", "..", "data")),
     help="The path to the folder containing the permafrost hackathon data",
 )
-parser.add_argument("-l", "--local", action="store_true", help="Only use local files and not data from Azure")
+parser.add_argument(
+    "-l",
+    "--local",
+    action="store_true",
+    help="Only use local files and not data from Azure",
+)
 args = parser.parse_args()
 data_path = Path(args.path)
 
@@ -57,17 +62,21 @@ if not args.local:
         container="hackathon-on-permafrost",
         prefix="timeseries_derived_data_products",
         account_name=account_name,
-        account_key=account_key, 
+        account_key=account_key,
     )
 else:
-    timeseries_folder = Path(data_path).joinpath("timeseries_derived_data_products").resolve()
+    timeseries_folder = (
+        Path(data_path).joinpath("timeseries_derived_data_products").resolve()
+    )
     store = stuett.DirectoryStore(timeseries_folder)
     if vaisalawxt520windpth_file not in store:
         raise RuntimeError(
             "Please provide a valid path to the permafrost data or see README how to download it"
         )
 
-vaisalawxt520windpth_node = stuett.data.CsvSource(vaisalawxt520windpth_file,store=store)
+vaisalawxt520windpth_node = stuett.data.CsvSource(
+    vaisalawxt520windpth_file, store=store
+)
 vaisalawxt520windpth = vaisalawxt520windpth_node()
 
 # Create figure
